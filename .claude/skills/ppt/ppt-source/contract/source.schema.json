@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ppt/source.schema.json",
+  "title": "01_source.json — 발표 덱 근거 자산 매니페스트",
+  "type": "object",
+  "required": ["deck_id", "as_of", "generated_by", "target", "sources", "facts", "limitations"],
+  "additionalProperties": false,
+  "properties": {
+    "deck_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$",
+      "description": "output/ppt/<deck-id>/ 와 같은 값"
+    },
+    "as_of": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+      "description": "이 매니페스트를 만든 날. 상대일 표기 금지"
+    },
+    "generated_by": { "const": "ppt-curator" },
+    "target": {
+      "type": "string",
+      "minLength": 2,
+      "description": "이 덱이 정리하는 작업 범위. 호출 시 받는다"
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "path", "owner_team", "format", "sha256", "contract_status"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^src-[a-z0-9][a-z0-9-]*$" },
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+",
+            "description": "저장소 루트 기준 상대경로. 절대경로와 상위 디렉터리 참조는 금지한다"
+          },
+          "owner_team": { "enum": ["legal", "kb", "viz", "common", "docs"] },
+          "format": {
+            "enum": ["json", "jsonl", "csv", "ttl", "md", "png", "svg", "pptx", "pdf", "html", "other"]
+          },
+          "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "contract_status": {
+            "enum": ["verified", "failed", "unchecked", "unknown"],
+            "description": "verified=검증기 통과 확인, failed=검증기 실패 확인, unchecked=검증기는 있으나 돌리지 않음, unknown=검증기 유무 미상. 추정으로 승격하지 않는다"
+          },
+          "as_of": {
+            "type": ["string", "null"],
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+            "description": "그 산출물 자신의 기준시점"
+          },
+          "note": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "facts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "source_id", "subject", "locator", "label", "value", "measured_by", "as_of"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^f-[a-z0-9][a-z0-9-]*$" },
+          "source_id": { "type": "string", "pattern": "^src-[a-z0-9][a-z0-9-]*$" },
+
+          "subject": {
+            "type": "string",
+            "minLength": 2,
+            "description": "무엇의 수치인가. 개체 종류를 적는다. 예 '시행지침 문서'·'위임축 규범값'·'외부 참조 간선'. label 은 자유문이고 이 필드는 대조 가능한 개체명이다"
+          },
+          "period": {
+            "type": ["string", "null"],
+            "description": "이 수치가 포괄하는 기간. 예 '2004-2024'. 시점 개념이 없으면 null"
+          },
+          "spatial_unit": {
+            "type": ["string", "null"],
+            "description": "공간 단위. 예 '지구'·'시군구'·'전국'. 공간 개념이 없으면 null"
+          },
+          "comparison_basis": {
+            "type": ["string", "null"],
+            "description": "무엇에 대비한 값인가. 예 '전체 문서 189 대비'. 비교값이 아니면 null"
+          },
+
+          "locator": {
+            "type": "string",
+            "pattern": "^(?:$|/.*|@(?:rows|columns|records|bytes|distinct/.+|nonempty/.+))$",
+            "description": "재측정 위치. JSON은 RFC 6901 pointer, CSV는 @rows·@columns·@distinct/<열>·@nonempty/<열>, JSONL은 @records, 파일 크기는 @bytes"
+          },
+          "label": { "type": "string", "minLength": 2, "description": "사람이 읽는 이름" },
+          "value": { "type": ["number", "string", "boolean", "null"] },
+          "unit": { "type": ["string", "null"] },
+          "denominator": {
+            "type": ["number", "null"],
+            "description": "비율의 분모 수치. 비율이면 이 값 또는 denominator_fact 가 필요하다"
+          },
+          "denominator_fact": {
+            "type": ["string", "null"],
+            "pattern": "^f-[a-z0-9][a-z0-9-]*$",
+            "description": "분모가 별도 fact 로 있으면 그 id"
+          },
+          "as_of": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+          "measured_by": {
+            "type": "string",
+            "minLength": 4,
+            "not": { "pattern": "요약표에서\\s*옮김" },
+            "description": "어떻게 셌는지. 재현 가능한 문장이어야 한다. '요약표에서 옮김' 금지"
+          },
+          "caveat": {
+            "type": ["string", "null"],
+            "description": "표본 한계·품질 혼입·필터 조건. 상류 contract_status 가 failed 면 필수"
+          }
+        }
+      }
+    },
+    "limitations": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 2 },
+      "description": "이 덱이 말할 수 없는 것"
+    }
+  }
+}

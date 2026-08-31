@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://w3id.org/lp/contract/kb-plan-graph.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$comment",
+    "outBase",
+    "relations",
+    "relationOrigins",
+    "edgeRequirements",
+    "importRules",
+    "invariants",
+    "invariantTest"
+  ],
+  "properties": {
+    "$comment": {"$ref": "#/$defs/nonEmptyString"},
+    "outBase": {"const": "output/kb"},
+    "relations": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {"$ref": "#/$defs/relation"}
+    },
+    "relationOrigins": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["설명", "지구", "법령"],
+      "properties": {
+        "설명": {"$ref": "#/$defs/nonEmptyString"},
+        "지구": {"$ref": "#/$defs/nonEmptyString"},
+        "법령": {"$ref": "#/$defs/nonEmptyString"}
+      }
+    },
+    "edgeRequirements": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["공통", "origin=지구", "origin=법령"],
+      "properties": {
+        "공통": {"$ref": "#/$defs/nonEmptyStringArray"},
+        "origin=지구": {"$ref": "#/$defs/nonEmptyStringArray"},
+        "origin=법령": {"$ref": "#/$defs/nonEmptyStringArray"}
+      }
+    },
+    "importRules": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "idempotent",
+        "idempotentNote",
+        "filterFlags",
+        "filterFlagsNote",
+        "countReconciliation"
+      ],
+      "properties": {
+        "idempotent": {"const": true},
+        "idempotentNote": {"$ref": "#/$defs/nonEmptyString"},
+        "filterFlags": {"$ref": "#/$defs/nonEmptyStringArray"},
+        "filterFlagsNote": {"$ref": "#/$defs/nonEmptyString"},
+        "countReconciliation": {"$ref": "#/$defs/nonEmptyString"}
+      }
+    },
+    "invariants": {"$ref": "#/$defs/nonEmptyStringArray"},
+    "invariantTest": {"const": "pytest"}
+  },
+  "$defs": {
+    "nonEmptyString": {"type": "string", "minLength": 1},
+    "nonEmptyStringArray": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/nonEmptyString"}
+    },
+    "relation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from", "to", "meaning", "origin"],
+      "properties": {
+        "from": {"$ref": "#/$defs/nonEmptyString"},
+        "to": {"$ref": "#/$defs/nonEmptyString"},
+        "meaning": {"$ref": "#/$defs/nonEmptyString"},
+        "origin": {"enum": ["지구", "법령"]}
+      }
+    }
+  }
+}

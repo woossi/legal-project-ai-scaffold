@@ -1,0 +1,564 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "definiation.json — 정의 조항 용어집",
+  "type": "object",
+  "required": [
+    "meta",
+    "definition_articles",
+    "definitions"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": [
+        "생성근거",
+        "대상문서수",
+        "정의조항_보유문서수",
+        "제5조_보유문서수",
+        "수집범위",
+        "정의조항_판정규칙",
+        "판정근거별_정의문수",
+        "용어수",
+        "정의문수",
+        "조번호분포",
+        "주제분포",
+        "반복도등급",
+        "반복도등급_기준",
+        "스크립트",
+        "구조",
+        "대표정의_선정",
+        "갈래_판정",
+        "표면변이수",
+        "갈래보유_용어수",
+        "변이등급분포"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "생성근거": {
+          "type": "string"
+        },
+        "원본_생성일시": {
+          "type": "string"
+        },
+        "대상문서수": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "정의조항_보유문서수": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "제5조_보유문서수": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "용어수": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "정의문수": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "통합전_정의문수": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "수집범위": {
+          "type": "string"
+        },
+        "정의조항_판정규칙": {
+          "type": "object",
+          "required": [
+            "용어의정의",
+            "정의",
+            "용어에관한사항",
+            "에관한용어",
+            "제외"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "용어의정의": {
+              "type": "string"
+            },
+            "정의": {
+              "type": "string"
+            },
+            "용어에관한사항": {
+              "type": "string"
+            },
+            "에관한용어": {
+              "type": "string"
+            },
+            "제외": {
+              "type": "string"
+            }
+          }
+        },
+        "판정근거별_정의문수": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "조번호분포": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "주제분포": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "반복도등급": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "반복도등급_기준": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "terms_json_대비_회수": {
+          "type": "object",
+          "required": [
+            "회수_occurrence",
+            "사유"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "회수_occurrence": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "사유": {
+              "type": "string"
+            }
+          }
+        },
+        "정의문_원문보존": {
+          "type": "string"
+        },
+        "필드_모수_주의": {
+          "type": "string"
+        },
+        "스크립트": {
+          "type": "string"
+        },
+        "구조": {
+          "type": "string"
+        },
+        "대표정의_선정": {
+          "type": "string"
+        },
+        "갈래_판정": {
+          "type": "string"
+        },
+        "표면변이수": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "갈래보유_용어수": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "갈래수": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "변이등급분포": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "맨숫자_제외": {
+          "type": "string"
+        }
+      }
+    },
+    "definition_articles": {
+      "type": "object",
+      "required": [
+        "설명",
+        "고유표제수",
+        "titles"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "설명": {
+          "type": "string"
+        },
+        "고유표제수": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "titles": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "title",
+              "count"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "title": {
+                "type": "string",
+                "minLength": 1
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "definitions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "term",
+          "normalized",
+          "definition",
+          "definition_variance",
+          "doc_frequency",
+          "occurrence_count",
+          "district_ratio_def",
+          "ubiquity",
+          "articles",
+          "in_article_5",
+          "districts",
+          "surface_variant_count"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^T[0-9]{4,}$"
+          },
+          "term": {
+            "type": "string",
+            "minLength": 1
+          },
+          "normalized": {
+            "type": "string",
+            "minLength": 1
+          },
+          "surface_forms": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "definition_rule_part": {
+            "type": "string"
+          },
+          "definition_variance": {
+            "type": "string",
+            "enum": [
+              "일치",
+              "표현차이",
+              "실질충돌",
+              ""
+            ]
+          },
+          "variance_evidence": {
+            "type": "string"
+          },
+          "proviso_divergence": {
+            "type": "boolean"
+          },
+          "cited_laws": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "classification": {
+            "type": "object",
+            "description": "terms.json 에서 옮긴 개념 분류. ubiquity·source_article_* 는 자체 재계산 값과 경합하므로 담지 않는다",
+            "additionalProperties": false,
+            "properties": {
+              "concept_type": {
+                "type": "string"
+              },
+              "concept_type_is_primary": {
+                "type": "boolean"
+              },
+              "classification_confidence": {
+                "type": "string",
+                "enum": [
+                  "high",
+                  "medium",
+                  "low"
+                ]
+              },
+              "legal_status": {
+                "type": "string",
+                "enum": [
+                  "지침고유",
+                  "상위법령_인용",
+                  "혼합"
+                ]
+              },
+              "legal_status_evidence": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "occurrences": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "occurrences_with_cited_laws": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "occurrences_deferring_to_law": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "cited_law_ratio": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "defer_ratio": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "per_occurrence_distribution": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "지침고유": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "상위법령_인용": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "혼합": {
+                        "type": "integer",
+                        "minimum": 0
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "ubiquity"
+                  ]
+                },
+                {
+                  "required": [
+                    "source_article_title"
+                  ]
+                },
+                {
+                  "required": [
+                    "source_article_titles_observed"
+                  ]
+                },
+                {
+                  "required": [
+                    "source_topic"
+                  ]
+                },
+                {
+                  "required": [
+                    "ubiquity_by_total_docs"
+                  ]
+                }
+              ]
+            }
+          },
+          "doc_frequency": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "doc_frequency_all": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "occurrence_count": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "district_ratio_def": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "ubiquity": {
+            "type": "string",
+            "enum": [
+              "보편",
+              "빈출",
+              "산발",
+              "단일지구"
+            ]
+          },
+          "regions": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "articles": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": [
+                "article_no",
+                "topic",
+                "title_normalized",
+                "count"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "article_no": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 1
+                },
+                "topic": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "title_normalized": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "count": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          },
+          "in_article_5": {
+            "type": "boolean"
+          },
+          "districts": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "definition": {
+            "type": "string",
+            "minLength": 1
+          },
+          "definition_full": {
+            "type": "string",
+            "minLength": 1
+          },
+          "definition_district": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "surface_variant_count": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "definition_quality_flags": {
+            "type": "array",
+            "description": "대안이 없어 결함을 안은 채 채택한 대표 정의의 표시",
+            "items": {
+              "type": "string",
+              "enum": [
+                "한컴 사설영역 문자",
+                "`말함` 종결",
+                "절단"
+              ]
+            }
+          },
+          "variants_by_rule": {
+            "type": "array",
+            "description": "수치·요건이 지구마다 실제로 다를 때만 존재. 2개 이상이어야 의미가 있다",
+            "minItems": 2,
+            "items": {
+              "type": "object",
+              "required": [
+                "numeric_signature",
+                "definition",
+                "districts",
+                "doc_frequency",
+                "occurrence_count"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "numeric_signature": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "definition": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "definition_full": {
+                  "type": "string"
+                },
+                "districts": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "doc_frequency": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "occurrence_count": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "surface_variant_count": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "$comment": "legal-ocr 의 입력·출력·품질 게이트 계약. 실행체는 legal-textreform 이 소유하므로 이 파일은 OCR 작업의 반복 가능 경계만 선언한다.",
+  "skill": "legal-ocr",
+  "owns": [
+    "스캔본 PDF를 텍스트 또는 Markdown 으로 변환할 때의 OCR 판정 기준",
+    "OCR 산출물의 품질 플래그와 사후 검수 선행조건"
+  ],
+  "does_not_own": {
+    "../legal-textreform/scripts/convert.py": "Markdown 변환 실행체",
+    "../legal-textreform/case/_failed.json": "실패 사례 정본",
+    "output/legal/markdown/<지역>/<지구명>.md": "legal-textreform 변환 산출물"
+  },
+  "input": {
+    "sourcePdf": {
+      "path": "output/legal/시행지침/<지역>/<지구명>/지구단위계획 시행지침.<확장자>",
+      "requires": [
+        "파일이 존재한다",
+        "파일 크기가 0보다 크다",
+        "시행지침 어간만 선택한다"
+      ],
+      "prohibits": [
+        "도면 첨부(fileRegistNo 2·3·4·5)를 OCR 본문으로 입력",
+        "서버 원본 바이트를 덮어쓰기"
+      ]
+    },
+    "sampling": {
+      "pageSamples": 15,
+      "range": "문서 앞·중간·뒤에서 균등하게 표본을 뽑는다",
+      "scanThresholdCharsPerPage": 200,
+      "decision": "OCR 전 쪽당 실질 글자수가 200자 미만이면 스캔본으로 본다"
+    }
+  },
+  "execution": {
+    "renderer": {
+      "command": "pdftoppm",
+      "dpi": 300,
+      "mode": "gray",
+      "format": "png"
+    },
+    "ocr": {
+      "command": "tesseract",
+      "versionObserved": "5.5.2",
+      "language": "kor",
+      "psm": 4
+    },
+    "postProcess": [
+      "fold_padding 으로 연속 공백을 단일 스페이스로 줄인다",
+      "원문자·단위·백분율·조문 접두 오인식은 문맥 확인 후에만 보정 후보로 둔다"
+    ]
+  },
+  "output": {
+    "markdown": {
+      "path": "output/legal/markdown/<지역>/<지구명>.md",
+      "requires": [
+        "추출품질: OCR 플래그를 부착한다",
+        "원본 PDF 경로를 보존한다",
+        "OCR 후 쪽당 실질 글자수와 표본 쪽 범위를 기록한다"
+      ]
+    },
+    "limitations": [
+      "문자 단위 검사는 2단 조판의 읽기 순서 파손을 잡지 못한다",
+      "검사 통과는 육안 검수 면제를 의미하지 않는다"
+    ]
+  },
+  "verification": {
+    "precondition": "입력 PDF가 존재하고 OCR 대상 판정 표본을 갖는다",
+    "requiredChecks": [
+      "쪽당 실질 글자수",
+      "조문 번호 순서 역전율",
+      "연속 공백 최대 길이",
+      "OCR 오인식 사전 후보의 문맥 확인 여부"
+    ],
+    "followupSkill": "adversarial-review"
+  }
+}

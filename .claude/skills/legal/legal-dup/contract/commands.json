@@ -1,0 +1,81 @@
+{
+  "$comment": "collect.py 서브커맨드의 입출력 계약. 스키마로 표현되지 않는 선행조건·멱등성·재개 규칙을 선언한다. outBase 기준 상대경로이며 <>는 인자 치환.",
+  "outBase": "output/legal/시행지침",
+  "스키마고정": "실측값으로 고정한다. 상류 응답에 필드가 늘면 검증이 실패하며, 그때 스키마를 갱신한다",
+  "첨부보유": "시행지침 원문은 fileRegistNo=7 에만 존재한다. 첨부를 보유한 지구가 소수이므로 목록 건수와 수집 건수의 차이는 정상이다",
+  "commands": {
+    "index": {
+      "argv": ["index", "--region", "<region>"],
+      "region": ["서울", "인천", "경기"],
+      "requires": [],
+      "writes": [
+        {
+          "path": "<region>/_index.json",
+          "schema": "index.schema.json",
+          "flushPolicy": "지구 1건마다 임시 파일을 완성한 뒤 원자 교체한다. 중단 시 기존 정상 _index.json을 보존하고 새 임시 파일은 제거한다"
+        }
+      ],
+      "idempotent": false,
+      "rerun": "처음부터 재조회하고 _index.json 을 덮어쓴다"
+    },
+    "fetch": {
+      "argv": ["fetch", "--region", "<region>", "--file-type", "<csv>", "--dstrc", "<csv>"],
+      "region": ["서울", "인천", "경기"],
+      "fileTypeDefault": "7",
+      "fileTypeFormat": "fileRegistNo 콤마 구분. 항목 앞뒤 공백은 제거하고 빈 항목만 있으면 즉시 종료한다",
+      "dstrcDefault": "",
+      "dstrcFormat": "dstrcAppnNo 콤마 구분. 비우면 region 전건. 항목 앞뒤 공백은 제거한다. 표본 수집용이며 파일종류 조건을 풀지 않는다",
+      "requires": [
+        {
+          "path": "<region>/_index.json",
+          "completion": "total == indexed == items 길이",
+          "onMissing": "즉시 종료. index 를 먼저 실행해야 한다",
+          "onIncomplete": "즉시 종료. 같은 region의 index를 전건 완료한 뒤 다시 실행한다"
+        }
+      ],
+      "reads": [
+        {
+          "path": "meta.json",
+          "optional": true,
+          "usedFor": "재개 판정",
+          "note": "전 지구 통합 파일이다. 지구별 파일이 아니므로 이번 region 밖의 지구도 함께 실린다"
+        }
+      ],
+      "writes": [
+        {
+          "path": "meta.json",
+          "schema": "meta.schema.json",
+          "mergePolicy": "dstrcAppnNo 단위 교체·추가. region 을 통째로 갈아끼우지 않는다 — fetch 는 --file-type 에 걸린 지구만 대상이라, region 을 비우면 다른 file-type 으로 받아 둔 지구가 사라진다",
+          "downloadedMergePolicy": "지구 단위 교체이므로 downloaded 도 통째로 갈린다. 이번 --file-type 에 안 걸린 기존 기록을 (fileCode, fileRegistNo) 로 보존한 뒤 이번 분을 얹는다. 보존 대상은 파일이 실재하고 크기가 0이 아닌 것뿐이다",
+          "$실패이력": "이 병합 없이 --file-type 5 로 182지구를 돌려 코드 7 기록이 190→8 로 사라졌다. 파일은 디스크에 남아 downloaded ⊆ attachments 도 savedAs 실재도 통과했다 — 계약 검증이 잡지 못하는 손실이다. 백업 없이 복구 가능했던 것은 워크트리에 이전 meta.json 사본이 남아 있었기 때문이다",
+          "flushPolicy": "임시 파일에 쓰고 교체한다 — 중단해도 부분 기록이 남지 않는다"
+        },
+        {
+          "path": "<region>/<지구명>/<savedAs>",
+          "schema": null,
+          "note": "원본 바이트 그대로. savedAs 는 첨부 종류(fileRegistNo)별 어간에 원본 확장자를 붙인 이름이고 서버 원본명은 originalName 에 남긴다. 압축 해제·형식 변환은 이 스킬 범위 밖",
+          "assetStems": {
+            "2": "위치도",
+            "3": "광역교통계획도",
+            "4": "토지이용계획도",
+            "5": "지구단위계획도 (가구 및 획지경계도)",
+            "7": "지구단위계획 시행지침",
+            "그 외": "첨부-<fileRegistNo>"
+          },
+          "uniqueness": "한 지구 디렉터리 안에서 savedAs 는 유일하다. 종류마다 어간이 다르므로 도면과 시행지침이 같은 확장자로 와도 겹치지 않는다. 그래도 이름이 겹치면 확장자 앞에 -2, -3 을 붙이고, 이미 있는 파일은 지우지 않는다",
+          "immutable": "코드 7 의 어간은 `지구단위계획 시행지침` 으로 고정한다. 190건이 이미 수집됐고 legal-textreform 과 tables.csv 의 출처문서가 이 이름을 참조한다",
+          "inFlight": "받는 동안에는 `.part-<fileCode>` 로 쓰고 완료 후 개명한다 — 서버 원본명으로 곧장 쓰면 같은 이름의 기존 첨부를 개명 전에 지운다"
+        }
+      ],
+      "idempotent": true,
+      "resumeRule": "통합 meta.json 에서 지구번호로 찾은 downloaded[].savedAs 가 가리키는 파일이 존재하고 크기가 0이 아니면 그 첨부는 다시 받지 않는다. 판정 키는 (fileCode, fileRegistNo) 라서 같은 지구를 다른 --file-type 으로 다시 돌리면 새 첨부만 받는다",
+      "selection": "attachments[].fileRegistNo 가 --file-type 에 포함된 지구만 대상. --dstrc 를 주면 그 지구번호로 한 번 더 좁힌다. 나머지는 디렉터리조차 만들지 않는다",
+      "order": "전수 수집 전에 --dstrc 로 표본을 먼저 받아 품질을 판정한다. 도면 첨부(코드 2·4·5)는 축척과 해상도가 지구마다 달라 판독 가능 여부가 수집 전에 정해지지 않는다"
+    }
+  },
+  "downstream": {
+    "consumer": "legal-textreform",
+    "input": "<region>/<지구명>/ 디렉터리",
+    "contract": "원본을 변형 없이 남기는 것까지가 legal-dup 의 책임"
+  }
+}

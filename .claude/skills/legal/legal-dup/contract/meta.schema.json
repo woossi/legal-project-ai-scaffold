@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "legal-dup/meta.schema.json",
+  "title": "output/legal/시행지침/meta.json",
+  "description": "collect.py fetch 의 산출물. 전 지구의 메타를 파일 하나에 모은다. districts[] 항목은 _index.json items 원본 필드 + collectedAt + attachments + downloaded 로, API 원본을 변형하지 않는다. 래퍼(schemaVersion·generatedAt·districtCount·summary)만 이 프로젝트가 정의한다. 재실행 시 districts[].downloaded[].savedAs 로 재개를 판정하므로 이 파일을 지우면 전 지구가 재다운로드된다.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "generatedAt", "districtCount", "summary", "districts"],
+  "properties": {
+    "schemaVersion": { "enum": [1] },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "districtCount": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "districts 길이와 같아야 한다 — save() 가 매번 다시 센다"
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "districts 에서 매번 재계산하는 개괄. 본문과 어긋날 수 없으므로 별도 갱신 대상이 아니다",
+      "required": ["byRegion", "byLaword", "byStep", "byNewtown", "totalAreaSqm", "downloadedFiles", "collectedRange"],
+      "properties": {
+        "byRegion": { "$ref": "#/$defs/countMap", "description": "지역별 지구 수" },
+        "byLaword": { "$ref": "#/$defs/countMap", "description": "근거법령별 지구 수" },
+        "byStep": { "$ref": "#/$defs/countMap", "description": "사업단계별 지구 수" },
+        "byNewtown": { "$ref": "#/$defs/countMap", "description": "신도시 구분별 지구 수. 해당 없는 지구가 다수라 합계가 districtCount 와 다른 것이 정상이다" },
+        "totalAreaSqm": {
+          "type": "number",
+          "minimum": 0,
+          "description": "ar 을 파싱해 더한 참고값. ar 은 문자열이라 파싱 실패분은 빠질 수 있다"
+        },
+        "downloadedFiles": { "type": "integer", "minimum": 0, "description": "수신 파일 총 건수" },
+        "collectedRange": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "required": ["first", "last"],
+          "description": "collectedAt 의 최초·최종. 지구가 없으면 null",
+          "properties": {
+            "first": { "type": "string", "format": "date-time" },
+            "last": { "type": "string", "format": "date-time" }
+          }
+        }
+      }
+    },
+    "districts": {
+      "type": "array",
+      "description": "region 은 계약 enum 순, 그 안에서 dstrcNm 가나다순. dstrcAppnNo 는 고유하다",
+      "items": { "$ref": "#/$defs/district" }
+    }
+  },
+  "$defs": {
+    "countMap": {
+      "type": "object",
+      "additionalProperties": { "type": "integer", "minimum": 0 }
+    },
+    "district": {
+      "type": "object",
+      "description": "지구 하나의 메타. 개별 meta.json 시절의 최상위 구조를 그대로 유지한다",
+      "additionalProperties": false,
+      "required": [
+        "num", "dstrcAppnNo", "dstrcNm", "lcCode", "lawordCode", "ctprvnNm",
+        "lawordNm", "stepCode", "stepNm", "centerx", "centery",
+        "minx", "miny", "maxx", "maxy", "ar", "bsnsOpertnPd",
+        "opertnProfsNm", "newtownNm", "region",
+        "collectedAt", "attachments", "downloaded"
+      ],
+      "properties": {
+        "num": { "type": "integer" },
+        "dstrcAppnNo": { "type": "string", "minLength": 1 },
+        "dstrcNm": { "type": "string", "minLength": 1 },
+        "lcCode": { "type": ["string", "null"] },
+        "lawordCode": { "type": ["string", "null"] },
+        "ctprvnNm": { "type": ["string", "null"] },
+        "lawordNm": { "type": ["string", "null"], "description": "근거 법령명" },
+        "stepCode": { "type": ["string", "null"] },
+        "stepNm": { "type": ["string", "null"] },
+        "centerx": { "type": ["number", "string", "null"] },
+        "centery": { "type": ["number", "string", "null"] },
+        "minx": { "type": ["number", "string", "null"] },
+        "miny": { "type": ["number", "string", "null"] },
+        "maxx": { "type": ["number", "string", "null"] },
+        "maxy": { "type": ["number", "string", "null"] },
+        "ar": { "type": ["number", "string", "null"], "description": "면적" },
+        "bsnsOpertnPd": { "type": ["string", "null"] },
+        "opertnProfsNm": { "type": ["string", "null"] },
+        "newtownNm": { "type": ["string", "null"] },
+        "region": {
+          "enum": ["서울", "인천", "경기"],
+          "description": "수집 시 디렉터리를 가른 기준. API 원본 시도명 ctprvnNm 과 다른 지구가 있다(상계 장암·위례)"
+        },
+        "collectedAt": { "type": "string", "format": "date-time" },
+        "attachments": {
+          "type": "array",
+          "description": "그 지구의 첨부 전체 (--file-type 과 무관)",
+          "items": { "$ref": "#/$defs/attachment" }
+        },
+        "downloaded": {
+          "type": "array",
+          "description": "이번 --file-type 으로 실제 수신한 것만. attachments 의 부분집합이므로 개수가 다른 것이 정상이다",
+          "items": { "$ref": "#/$defs/downloaded" }
+        }
+      }
+    },
+    "attachment": {
+      "type": "object",
+      "required": ["fileCode", "fileRegistNo", "label"],
+      "additionalProperties": false,
+      "properties": {
+        "fileCode": { "type": "string", "minLength": 1 },
+        "fileRegistNo": { "type": "string", "pattern": "^[0-9]+$" },
+        "label": { "type": "string" }
+      }
+    },
+    "downloaded": {
+      "type": "object",
+      "required": ["fileCode", "fileRegistNo", "label", "savedAs", "originalName", "bytes", "sourceUrl"],
+      "additionalProperties": false,
+      "properties": {
+        "fileCode": { "type": "string", "minLength": 1 },
+        "fileRegistNo": { "type": "string", "pattern": "^[0-9]+$" },
+        "label": { "type": "string" },
+        "savedAs": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^/\\\\]+$",
+          "description": "지구 디렉터리 안의 실제 파일명. 첨부 종류(fileRegistNo)별 어간에 원본 확장자를 붙인다 — 코드 7 은 `지구단위계획 시행지침`, 코드 5 는 `지구단위계획도 (가구 및 획지경계도)` 이며 나머지는 commands.json 의 assetStems 를 따른다. 재개 판정이 이 값으로 파일을 찾으므로 실제 이름이어야 한다. 한 지구 안에서 유일하고, 겹치면 확장자 앞에 -2 가 붙는다. 디렉터리는 region 과 dstrcNm 으로 정한다. 확장자는 Content-Type(application/x-msdownload)이 아니라 원본명을 따르며, .zip 이름의 EGG 아카이브가 실재한다"
+        },
+        "originalName": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^/\\\\]+$",
+          "description": "서버 Content-Disposition filename 을 URL 디코딩한 값. 경로 구분자·제어문자만 치환한다. 원본이 시행지침이 아닌 문서(개발계획 도서·결정조서 등)인지는 이 값으로만 판별한다"
+        },
+        "bytes": { "type": "integer", "exclusiveMinimum": 0, "description": "0바이트는 실패로 간주되어 재개 대상이 된다" },
+        "sourceUrl": { "type": "string", "pattern": "^https://openapi\\.jigu\\.go\\.kr/file/dstrcFileDownload\\.json\\?jobSe=dstrc&fileCode=[^&]+&fileRegistNo=[0-9]+$" }
+      }
+    }
+  }
+}

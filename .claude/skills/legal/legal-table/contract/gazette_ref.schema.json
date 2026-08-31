@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "legal-table/contract/gazette_ref.schema.json",
+  "title": "gazette_refs.json — 고시·공고 번호 관측",
+  "type": "object",
+  "required": ["meta", "records"],
+  "additionalProperties": false,
+  "properties": {
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["생성기", "입력", "레코드수", "보유문서수", "전체문서수",
+                   "reference_class_분포", "승격금지", "판정_한계"],
+      "properties": {
+        "생성기": {"const": "legal-table/scripts/extract_gazette.py"},
+        "입력": {"const": "output/legal/markdown/{서울,인천,경기}/*.md"},
+        "레코드수": {"type": "integer", "minimum": 0},
+        "보유문서수": {"type": "integer", "minimum": 0, "maximum": 189},
+        "전체문서수": {"const": 189},
+        "reference_class_분포": {
+          "type": "object",
+          "propertyNames": {"enum": ["자기지시후보", "외부인용후보", "미판정"]},
+          "additionalProperties": {"type": "integer", "minimum": 0}
+        },
+        "승격금지": {"type": "string", "pattern": "승격하지 않는다"},
+        "판정_한계": {"type": "string", "minLength": 1}
+      }
+    },
+    "records": {"type": "array", "items": {"$ref": "#/$defs/gazette"}}
+  },
+  "$defs": {
+    "gazette": {
+      "type": "object",
+      "required": ["gazette_id", "dstrcAppnNo", "lc5", "지역", "district",
+                   "source_file", "surface", "surface_offset", "date_surface",
+                   "line", "quote", "reference_class", "class_basis",
+                   "issuer_surface", "article"],
+      "additionalProperties": false,
+      "$comment": "asOf·적용판본·시행일 계열 필드를 두지 않는다. 두면 관측값이 확정값으로 승격된다. additionalProperties:false 가 그 금지를 구조로 강제한다.",
+      "properties": {
+        "gazette_id": {"type": "string", "pattern": "^G[0-9]{6}$"},
+        "dstrcAppnNo": {"type": "string", "pattern": "^[0-9]{5}[A-Z]{2}[0-9]{7}$"},
+        "lc5": {"type": "string", "pattern": "^[0-9]{5}$"},
+        "지역": {"enum": ["서울", "인천", "경기"]},
+        "district": {"type": "string", "minLength": 1},
+        "source_file": {"type": "string", "pattern": "^output/legal/markdown/"},
+        "surface": {"type": "string", "minLength": 1},
+        "surface_offset": {
+          "type": "array", "items": {"type": "integer", "minimum": 0},
+          "minItems": 2, "maxItems": 2
+        },
+        "date_surface": {
+          "type": ["string", "null"],
+          "description": "표기 뒤 30자 안의 날짜 표기. 못 읽으면 null 이고 추정하지 않는다. **이 값은 적용일이 아니다**"
+        },
+        "line": {"type": "integer", "minimum": 1},
+        "quote": {"type": "string", "minLength": 1},
+        "reference_class": {
+          "enum": ["자기지시후보", "외부인용후보", "미판정"],
+          "description": "후보 표시이지 확정이 아니다. 신호가 엇갈리면 미판정으로 둔다 — 자동 판정은 두 방향 다 오판이 났다"
+        },
+        "class_basis": {"type": "string", "minLength": 1},
+        "issuer_surface": {"type": ["string", "null"]},
+        "article": {
+          "oneOf": [
+            {"type": "null"},
+            {
+              "type": "object",
+              "required": ["no", "label", "line", "origin"],
+              "additionalProperties": false,
+              "properties": {
+                "no": {"type": "string"}, "label": {"type": "string"},
+                "line": {"type": "integer", "minimum": 1},
+                "origin": {"const": "조문헤딩"}
+              }
+            }
+          ]
+        },
+        "article_reason": {"type": "string", "minLength": 1}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"article": {"type": "null"}}},
+          "then": {"required": ["article_reason"]}
+        }
+      ]
+    }
+  }
+}

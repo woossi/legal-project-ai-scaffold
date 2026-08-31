@@ -1,0 +1,284 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ppt/deck.schema.json",
+  "title": "02_deck.json — 발표 덱 스펙",
+  "type": "object",
+  "required": ["deck_id", "as_of", "source_ref", "source_sha256", "profile", "title", "work_boundaries", "slides"],
+  "additionalProperties": false,
+  "$defs": {
+    "claim": {
+      "type": "object",
+      "required": ["display_value", "fact_ref"],
+      "additionalProperties": false,
+      "properties": {
+        "display_value": {
+          "type": ["number", "string"],
+          "description": "본문이나 캡션에 실제로 표시한 값"
+        },
+        "fact_ref": {
+          "type": "string",
+          "pattern": "^f-[a-z0-9][a-z0-9-]*$"
+        }
+      }
+    }
+  },
+  "properties": {
+    "deck_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "as_of": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+    "source_ref": { "const": "01_source.json" },
+    "source_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "쓰던 시점의 01_source.json 해시. 어긋나면 상류가 갱신된 것"
+    },
+    "profile": {
+      "enum": ["docs-ppt-20260813", "none"],
+      "description": "시각 토큰 프로필. docs-ppt-20260813 은 docs/ppt/design-tokens.json 을 쓴다"
+    },
+    "font_family": {
+      "type": "string",
+      "minLength": 1,
+      "description": "이 덱에만 적용할 설치 글꼴 family. 생략하면 profile의 글꼴을 쓴다"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "allOf": [
+        { "not": { "pattern": "다\\s*$" } },
+        { "not": { "pattern": "[?？]\\s*$" } }
+      ],
+      "description": "덱 제목. 역할명형 명사구. 서술어 종결 금지"
+    },
+    "work_boundaries": {
+      "const": [
+        "작업 1 — 수집 단계(자료 수집 및 정제)",
+        "작업 2 — 법 적용 확인",
+        "작업 3 — 스키마 설계 및 구현"
+      ],
+      "description": "현 프로젝트 발표에서 사용하는 고정 작업 경계와 순서"
+    },
+    "slides": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["no", "role", "title", "body"],
+        "additionalProperties": false,
+        "properties": {
+          "no": { "type": "integer", "minimum": 1 },
+          "role": {
+            "enum": ["cover", "task", "bridge", "appendix", "closing"],
+            "description": "task 는 'Task N' 또는 '작업 N' 형태의 작업 덱, bridge 는 연결, appendix 는 부록"
+          },
+          "layout": {
+            "enum": [
+              "default",
+              "decision-columns",
+              "process",
+              "visual-focus",
+              "cover-asym",
+              "story-left",
+              "story-right",
+              "story-metrics",
+              "process-stair",
+              "overview-asym",
+              "visual-rail",
+              "summary-asym",
+              "glossary"
+            ],
+            "description": "선택 편집형 배치. 생략하거나 default 이면 기존 역할별 배치를 유지한다"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "allOf": [
+              { "not": { "pattern": "다\\s*$" } },
+              { "not": { "pattern": "[?？]\\s*$" } }
+            ],
+            "description": "역할명형 명사구. 'Task N — 대상'·'작업 N — 대상' 또는 명사구 단독. 서술어 종결 금지"
+          },
+          "purpose": {
+            "type": "string",
+            "description": "이 슬라이드가 없으면 무엇이 안 보이는지. 스펙 내부 메모이며 렌더되지 않는다"
+          },
+          "period": {
+            "type": "string",
+            "minLength": 1,
+            "description": "표지에 표시할 보고 기간. 예: 2026.08.13–2026.08.26"
+          },
+          "stage": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 6,
+            "description": "기준 덱의 6단계 여정 레일에서 활성화할 단계. 없으면 레일을 렌더하지 않는다"
+          },
+          "work_boundary": {
+            "enum": [
+              "작업 1 — 수집 단계(자료 수집 및 정제)",
+              "작업 2 — 법 적용 확인",
+              "작업 3 — 스키마 설계 및 구현"
+            ],
+            "description": "task 슬라이드가 보고하는 현 프로젝트 작업 경계"
+          },
+          "body": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["text"],
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "enum": ["범위", "결과", "결론", "남은 한계"],
+                  "description": "1단계 판단 불릿의 역할. task 하위 불릿에는 사용하지 않는다"
+                },
+                "text": { "type": "string", "minLength": 1 },
+                "fact_refs": {
+                  "type": "array",
+                  "minItems": 1,
+                  "uniqueItems": true,
+                  "items": { "type": "string", "pattern": "^f-[a-z0-9][a-z0-9-]*$" },
+                  "description": "수치를 포함하면 필수. 01_source.json 의 facts[].id"
+                },
+                "claims": {
+                  "type": "array",
+                  "minItems": 1,
+                  "uniqueItems": true,
+                  "items": { "$ref": "#/$defs/claim" },
+                  "description": "수치 토큰별 표시값과 fact의 명시적 결박. 수치를 포함하면 필수"
+                },
+                "emphasis": { "type": "boolean", "default": false },
+                "level": { "type": "integer", "minimum": 1, "maximum": 3, "default": 1 }
+              }
+            }
+          },
+          "visuals": {
+            "type": "array",
+            "maxItems": 1,
+            "description": "기본 렌더러는 슬라이드당 기존 시각자산 1개를 배치한다",
+            "items": {
+              "type": "object",
+              "required": ["kind", "path"],
+              "additionalProperties": false,
+              "properties": {
+                "kind": { "enum": ["image", "table"] },
+                "path": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "기존 산출물 경로. CLI 덱은 output/viz 상대경로를 쓰고 테스트·내부 API는 절대경로도 허용한다"
+                },
+                "caption": { "type": ["string", "null"] },
+                "crop_bottom": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 0.2,
+                  "description": "슬라이드 배치에서만 숨길 이미지 하단 비율. 원본 파일은 수정하지 않는다"
+                },
+                "fact_refs": {
+                  "type": "array",
+                  "minItems": 1,
+                  "uniqueItems": true,
+                  "items": { "type": "string", "pattern": "^f-[a-z0-9][a-z0-9-]*$" }
+                },
+                "claims": {
+                  "type": "array",
+                  "minItems": 1,
+                  "uniqueItems": true,
+                  "items": { "$ref": "#/$defs/claim" },
+                  "description": "숫자 캡션의 표시값과 fact 결박"
+                }
+              }
+            }
+          },
+          "notes": { "type": "string", "description": "발표자 노트. 전문용어 원어를 여기 둔다" }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": { "role": { "const": "task" } },
+              "required": ["role"]
+            },
+            "then": {
+              "required": ["work_boundary"],
+              "properties": {
+                "title": {
+                  "pattern": "^(?:Task|작업)\\s+[1-9]\\d*\\s+—\\s+\\S.+$"
+                },
+                "body": {
+                  "minItems": 4,
+                  "prefixItems": [
+                    {
+                      "required": ["kind", "level"],
+                      "properties": {
+                        "kind": { "enum": ["결과", "결론", "남은 한계"] },
+                        "level": { "const": 1 }
+                      }
+                    }
+                  ],
+                  "items": {
+                    "oneOf": [
+                      {
+                        "required": ["kind", "level"],
+                        "properties": {
+                          "kind": { "enum": ["결과", "결론", "남은 한계"] },
+                          "level": { "const": 1 }
+                        }
+                      },
+                      {
+                        "required": ["level"],
+                        "not": { "required": ["kind"] },
+                        "properties": { "level": { "const": 2 } }
+                      }
+                    ]
+                  },
+                  "allOf": [
+                    {
+                      "contains": {
+                        "type": "object",
+                        "properties": {
+                          "kind": { "const": "결과" },
+                          "level": { "const": 1 }
+                        },
+                        "required": ["kind", "level"]
+                      },
+                      "minContains": 1
+                    },
+                    {
+                      "contains": {
+                        "type": "object",
+                        "properties": {
+                          "kind": { "const": "결론" },
+                          "level": { "const": 1 }
+                        },
+                        "required": ["kind", "level"]
+                      },
+                      "minContains": 1
+                    },
+                    {
+                      "contains": {
+                        "type": "object",
+                        "properties": {
+                          "kind": { "const": "남은 한계" },
+                          "level": { "const": 1 }
+                        },
+                        "required": ["kind", "level"]
+                      },
+                      "minContains": 1
+                    },
+                    {
+                      "contains": {
+                        "type": "object",
+                        "properties": { "level": { "const": 2 } },
+                        "required": ["level"]
+                      },
+                      "minContains": 1
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

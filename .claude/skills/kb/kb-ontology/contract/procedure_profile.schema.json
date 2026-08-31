@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://w3id.org/lp/contract/procedure-profile.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["profileId", "lawVersion", "validFrom", "transitions"],
+  "properties": {
+    "profileId": {"$ref": "#/$defs/nonEmptyString"},
+    "lawVersion": {"$ref": "#/$defs/nonEmptyString"},
+    "validFrom": {"type": "string", "format": "date"},
+    "transitions": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/transition"}
+    }
+  },
+  "$defs": {
+    "nonEmptyString": {"type": "string", "minLength": 1},
+    "nonEmptyStringArray": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/nonEmptyString"}
+    },
+    "transition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "transitionId",
+        "preconditions",
+        "permittedSuccessor",
+        "requiredEvidence"
+      ],
+      "properties": {
+        "transitionId": {"$ref": "#/$defs/nonEmptyString"},
+        "preconditions": {"$ref": "#/$defs/nonEmptyStringArray"},
+        "permittedSuccessor": {"$ref": "#/$defs/nonEmptyString"},
+        "requiredEvidence": {
+          "$ref": "#/$defs/nonEmptyStringArray",
+          "minItems": 1
+        }
+      }
+    }
+  }
+}

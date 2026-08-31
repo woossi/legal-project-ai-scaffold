@@ -1,0 +1,68 @@
+{
+  "설명": "output/ppt/<deck-id>/03_qa.* 산출물 계약. 구조는 qa.schema.json, 판정 조건과 임계는 이 파일에 둔다. 임계는 조정 가능한 기본값이며 사용자가 지정한 hard rule 과 구분한다.",
+
+  "산출물": [
+    {
+      "path": "output/ppt/<deck-id>/03_qa.json",
+      "생성": "ppt-verify/scripts/verify_deck.py",
+      "내용": "검사 항목별 판정·집계·반려 대상·사각지대",
+      "schema": "qa.schema.json"
+    },
+    {
+      "path": "output/ppt/<deck-id>/03_qa.md",
+      "생성": "ppt-verifier",
+      "내용": "사람이 읽는 검증 보고. 실패 항목을 반려 대상별로 묶는다"
+    }
+  ],
+
+  "선행조건": [
+    "build/_build_report.json 이 존재한다",
+    "build/deck.pptx 가 존재한다",
+    "02_deck.json 과 01_source.json 이 존재한다",
+    "없는 입력이 있으면 해당 검사를 unchecked 로 기록한다. 건너뛴 것을 통과로 세지 않는다"
+  ],
+
+  "멱등성": "같은 pptx·spec·source 에 대해 다시 돌리면 items[].status 와 summary 가 같아야 한다. as_of 만 갱신된다. 판정이 달라지면 입력이 바뀐 것이며 verified[] 의 해시가 그 사실을 드러낸다.",
+
+  "hard_rule": {
+    "$comment": "사용자가 직접 지정한 규칙. 임계 조정 대상이 아니다.",
+    "title_style": "제목은 역할명형 명사구다. 서술형 종결과 명사화된 완결절(함·됨·임·했음·있었음)로 끝나면 fail. 덱 제목과 슬라이드 제목 전건에 적용",
+    "body_nominal": "본문은 명사형 종결(함·됨·임·음) 또는 명사구 종결을 기본으로 한다",
+    "bullet_hierarchy": "task의 각 level 1 판단 불릿 직후에는 level 2 하위 근거가 하나 이상 있어야 한다",
+    "display_value_binding": "본문·시각 캡션의 숫자 토큰은 claims[].display_value 로 표시값을 선언하고 참조 fact.value 와 일치해야 한다"
+  },
+
+  "기본값": {
+    "$comment": "이 스킬이 정한 조정 가능한 값. 사용자 지정이 아니므로 프로필·호출로 바꿀 수 있고 바꾸면 items[].threshold_overridden 을 true 로 둔다.",
+    "body_nominal_ratio_min": 0.8,
+    "body_items_per_slide": [3, 7],
+    "body_item_max_lines": 2,
+    "text_overflow_line_tolerance": 1
+  },
+
+  "값도메인": {
+    "status": {
+      "pass": "검사를 돌렸고 통과",
+      "fail": "검사를 돌렸고 실패. detail 과 owner 가 필수",
+      "warn": "임계 부근. 사람이 본다",
+      "unchecked": "돌리지 못함. 통과로 세지 않는다"
+    },
+    "owner": {
+      "ppt-writer": "제목 문체·본문 문체·수치 근거 누락",
+      "ppt-curator": "fact 누락·분모 없음·상류 해시 불일치",
+      "ppt-renderer": "빌드 손상·미리보기 누락·폰트 폴백·육안확인 미기록"
+    },
+    "verdict": "failed 가 0 이고 unchecked 가 0 일 때만 accept"
+  },
+
+  "교차제약": [
+    "summary.passed + failed + warned + unchecked 는 items 길이와 같아야 한다",
+    "status 가 fail 인 항목은 detail 과 owner 가 모두 있어야 한다",
+    "verdict 가 accept 이면 summary.failed 와 summary.unchecked 가 모두 0 이어야 한다",
+    "이 스킬은 01_source.json·02_deck.json·build/** 를 쓰지 않는다. 읽기 전용이다",
+    "blind_spots 는 1건 이상이어야 한다",
+    "adversarial_review 가 unchecked 이면 verdict 는 reject 다"
+  ],
+
+  "검증": "common/contract-verify 는 등록된 ppt-verify/scripts/verify_deck.py 를 실행한다. 반박검증 기록이 없으면 이 검증기는 adversarial_review 를 unchecked 로 기록하고 accept 를 막는다."
+}

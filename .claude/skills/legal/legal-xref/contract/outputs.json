@@ -1,0 +1,143 @@
+{
+  "$comment": "output/legal/xref/ 산출물 목록과 교차 제약. 지침 조문 본문의 참조가 정본이며, terms.json 정의문의 인용 간선은 legal-statute 가 정본이다. 두 산출물은 모수가 다르므로 나란히 비교하지 않는다.",
+  "outBase": "output/legal/xref",
+  "files": {
+    "xref_index.json": {
+      "required": true,
+      "schema": "xref.schema.json",
+      "role": "지침 조문 → 참조 레코드. 참조마다 지구·조문·근거 발췌를 담는다",
+      "generator": "scripts/extract_xref.py",
+      "topKeys": ["meta", "xrefs"],
+      "constraint": "scope 가 미판정이거나 resolution 이 미해소인 레코드는 여기 두지 않는다. 전부 _xref_report.json 으로 격리한다"
+    },
+    "xref_by_article.json": {
+      "required": true,
+      "schema": null,
+      "role": "조문 → 참조 역인덱스와 대상 → 조문 역인덱스. search_xref.py 의 입력",
+      "generator": "scripts/build_article_index.py",
+      "topKeys": ["meta", "by_article", "by_target"],
+      "constraint": "xref_index.json 을 다시 센 재계산 필드다. xref_index.meta 의 동명 수치와 나란히 비교하지 않는다"
+    },
+    "_xref_report.json": {
+      "required": true,
+      "schema": null,
+      "role": "미해소·미판정·범위전개 실패·후보 다중·법령정본 미수록",
+      "generator": "scripts/extract_xref.py",
+      "topKeys": ["meta", "isolated", "후보다중", "법령정본_미수록"],
+      "constraint": "결손이 아니라 기록이다. 격리 레코드도 xref.schema.json 의 레코드 구조를 지킨다"
+    },
+    "table_refs.json": {
+      "required": true,
+      "schema": "table_refs.schema.json#/definitions/table_refs",
+      "role": "건축부문 수합 조문의 표참조 마커 → output/legal/table/tables.csv 표 레코드 해소 간선",
+      "generator": "scripts/build_table_refs.py",
+      "topKeys": ["meta", "간선"],
+      "constraint": "매칭방법이 직접일치·분책좁힘인 것만 여기 있다. 후보 다중·대상 없음·외부법령별표·표기해석불가는 전부 _table_refs_report.json 으로 격리한다. xref_index.json 과는 모수가 다르다(조문 본문 참조 전체 대 건축부문 표참조 마커) — 나란히 비교하지 않는다"
+    },
+    "_table_refs_report.json": {
+      "required": true,
+      "schema": "table_refs.schema.json#/definitions/table_refs_report",
+      "role": "표기해석불가·외부법령별표참조·외부법령별표참조추정·대상없음·후보다중으로 격리된 표참조 마커",
+      "generator": "scripts/build_table_refs.py",
+      "topKeys": ["meta", "격리", "격리_사유별_집계"],
+      "constraint": "결손이 아니라 기록이다. 격리 레코드도 table_refs.schema.json 의 격리 레코드 구조를 지킨다"
+    }
+  },
+  "선행조건": [
+    "output/legal/markdown/<지역>/<지구명>.md 189건이 있어야 한다. 조문 헤딩(`#### 제N조(표제)`)이 승격된 문서는 133건이고 나머지 56건은 문서레벨로 잡힌다",
+    "각 md 의 frontmatter 에 지구번호가 있어야 한다. 없으면 그 문서는 통째로 건너뛰고 _xref_report.meta.지구번호_없는_문서 에 남긴다",
+    "output/legal/statute/statute_master.json 은 선택이다. 없으면 법령 어휘를 코퍼스 학습만으로 만들고 master_status 가 전부 미수록이 된다",
+    "output/legal/xref/xref_index.json 이 있어야 build_article_index.py 와 search_xref.py 가 돈다",
+    "문서의 편·장·절 구조는 md 헤딩에서 먼저 세우고, 줄 전체가 편·장·절 표목인 평문 줄로 보강한다. 표목이 헤딩으로 승격되지 않은 문서가 있어 헤딩만으로는 대조 모수가 모자란다",
+    "output/legal/건축부문/건축부문_수합.json 이 있어야 한다. districts[].조문[] 의 표참조(플래그)·원문·행·블록·slot 을 쓴다",
+    "output/legal/table/tables.csv 가 있어야 한다. 표ID·지구번호·캡션원문·출처문서 를 쓴다",
+    "output/legal/markdown/<지역>/<지구명>.md 의 병합 경계 주석(`<!-- 원본: 파일명 -->`)과 frontmatter `구성문서수` 는 분책좁힘·분책 통계에 쓴다. 경계 주석이 없으면 분책좁힘을 시도하지 않고 원 후보를 그대로 남긴다(격리 후보다중으로 갈 수 있다) — 없다고 스크립트가 멈추지는 않는다"
+  ],
+  "멱등성": [
+    "extract_xref.py 는 문서를 정렬 순회하고 레코드를 (지구번호, 문서경로, 줄, 위치, kind, 표기) 로 정렬한 뒤 xref_id 를 붙인다. 같은 입력에 같은 산출물이다",
+    "xref_id 는 정렬 후 일련번호이므로 md 가 바뀌면 번호가 밀린다. 외부에서 xref_id 를 고정 식별자로 저장하지 않는다",
+    "build_article_index.py 는 조문키·대상키를 정렬해 직렬화한다",
+    "build_table_refs.py 는 지구 순회를 건축부문_수합.json districts 배열 순서, 조문 순회를 그 배열 안 조문 리스트 순서 그대로 따른다. 마커는 정규식 finditer 발생 위치(char) 순으로 모으고, 같은 (유형,라벨) 의 원문마커 목록은 sorted() 로 직렬화 순서를 고정한다. tables.csv 후보는 파일 행 순서 그대로 쌓는다. meta 에 타임스탬프 필드를 두지 않는다 — 같은 세 입력(수합.json·tables.csv·markdown)에 바이트 단위로 같은 두 산출물이다(실측: 연속 3회 실행 SHA-256 동일)"
+  ],
+  "값도메인": {
+    "$comment": "실측 관측값으로 고정한다. 새 값이 나오면 판정 로직이 바뀐 것이므로 계약을 먼저 갱신한다",
+    "scope": ["내부", "외부", "미판정"],
+    "kind": ["법령", "법령조문", "별표", "별지·서식", "부칙", "내부조문",
+             "내부표목", "외부문서", "범위", "준용"],
+    "relation": ["참조", "준용"],
+    "resolution": ["직접", "상대참조해소", "범위전개", "미해소"],
+    "article_origin": ["조문헤딩", "문서레벨"],
+    "master_status": ["정본대조", "미대조", "미수록"],
+    "scope_basis": {
+      "인용부호법령": "인용부호로 묶였고 법령 접미사로 끝난다 → 외부",
+      "인용부호문서": "인용부호로 묶였고 문서 접미사로 끝나거나 발행 주체·연도가 붙었다 → 외부",
+      "인용부호표목": "인용부호로 묶였으나 같은 문서의 표목·조문 표제다 → 내부",
+      "어휘일치법령": "인용부호 없이 학습한 법령 어휘와 최장 일치했다 → 외부",
+      "상대참조": "동법·같은 법을 같은 문장의 선행 법령으로 해소했다 → 외부",
+      "본지침명시": "같은 문장 앞에 `이 지침`·`본 지침`·`지구단위계획의` 가 있다 → 내부",
+      "문서조문실재": "선행 법령이 없고 그 조번호가 문서 조문 트리에 있다 → 내부",
+      "현재조문내": "조번호 없이 항·호·목만 적혔고 조문 안이다 → 내부",
+      "편장절한정": "참조 바로 앞에 편·장·절 한정어가 있다 → 내부",
+      "문서표제일치": "표기가 함께 단 표제가 그 문서의 조문 표제다 → 내부",
+      "편장절실재": "인용부호 없이 적힌 편·장·절이 그 문서의 편·장·절 구조에 실재한다 → 내부",
+      "편장절_대조불가": "인용부호 없이 적힌 편·장·절을 그 문서의 편·장·절 구조와 대조하지 못했다. 편 표목이 헤딩으로도 평문 표목 줄로도 잡히지 않은 문서다 → 미판정",
+      "선행법령없음_문서귀속": "별표·별지·부칙에 선행 법령이 없다 → 그 문서 것으로 본다",
+      "선행법령_비인접": "같은 문장에 법령이 있으나 인접하지 않다 → 미판정",
+      "선행법령없음": "상대참조인데 문장에 선행 법령이 없다 → 미판정",
+      "선행법령_어휘미포착": "참조 바로 앞 표기가 법령 접미사로 끝나나 어휘에 없다. 인용부호로 묶인 적 없는 법령이므로 내부로 뒤집지 않는다 → 미판정",
+      "문서구분불가": "인용부호로 묶였고 `…계획` 등으로 끝나나 발행 주체·연도가 없다. 같은 지구단위계획의 구성 항목일 수 있다 → 미판정",
+      "근거없음": "선행 법령도, 문서 조문 실재도, 지침 명시도 없다 → 미판정",
+      "준용대상표기없음": "준용 서술은 있으나 문장에 참조 표기가 없다 → 미판정"
+    },
+    "table_refs.마커유형": ["표", "별표"],
+    "table_refs.매칭방법": ["직접일치", "분책좁힘"],
+    "table_refs.격리사유": ["표기해석불가", "외부법령별표참조", "외부법령별표참조추정",
+                        "대상없음", "후보다중"],
+    "table_refs.격리사유_뜻": {
+      "표기해석불가": "정규화라벨에 숫자가 없다. 실측 다수가 markdown 표 유실 placeholder(`> [표]`) 이거나 '표계속'·'표 참조' 류 서술 조각이다 — 매칭을 시도하지 않는다",
+      "외부법령별표참조": "괄호 없는(bare) '별표N' 이고 마커 직전 어절이 법령류 접미어(법·법률·시행령·시행규칙·조례·고시·지침·기준·규정)로 끝난다 — 매칭을 시도하지 않는다",
+      "외부법령별표참조추정": "괄호 없는 '별표N' 이나 법령 인접 판정에 걸리지 않았고 tables.csv 에 동일 (지구,라벨) 표가 없다 — 매칭은 시도했으나 대상이 없고, 외부 법령일 가능성을 관측값으로만 남긴다",
+      "대상없음": "괄호형 '표N'·'별표N' 이고 tables.csv 에 동일 (지구,라벨) 표 레코드가 없다. output/legal/table/_table_loss.json 의 표 추출 유실과 상당 부분 겹친다(정본 대조는 하지 않는다)",
+      "후보다중": "동일 (지구,라벨) 표 레코드가 tables.csv 에 2개 이상이고, 분책좁힘으로도 1개로 줄지 않았다. 표본 다수가 표ID 연속(페이지 분할 표 추정)이지만 확정하지 않는다"
+    }
+  },
+  "crossFileConstraints": [
+    "xref_index.meta.참조수 는 xrefs 길이와 같아야 한다",
+    "xref_index.xrefs[].xref_id 와 _xref_report.isolated[].xref_id 는 서로 겹치지 않아야 하고, 둘을 합치면 X000001 부터 빈 번호 없이 이어져야 한다 — 격리가 누락이 아니라 분류임을 보인다",
+    "xref_index.xrefs[].scope 는 내부·외부만이어야 한다. 미판정은 전부 _xref_report.isolated 에 있어야 한다",
+    "xref_index.xrefs[].resolution 은 직접·상대참조해소·범위전개만이어야 한다. 미해소는 전부 격리되어야 한다",
+    "surface 는 quote 안에 실재해야 한다 — 환각 전수 검사. quote 는 참조 위치 기준 발췌여야 하며 문장 앞부분을 잘라 담으면 뒤쪽 참조가 근거 밖으로 밀려난다",
+    "surface 는 source_file 의 line 번째 줄에 실재해야 한다 — 원문 대조",
+    "target.statute_official 은 statute_master.json 의 정식명칭과 같아야 한다. master_status 가 미수록·미대조이면 비어 있어야 한다 — 못 찾은 것을 찾은 것처럼 만들지 않는다. legal-statute 의 미대조를 정본대조로 승격하지 않는다",
+    "target.article_iri 는 그 지구의 guidelineArticle IRI 여야 하고 dstrcAppnNo 가 일치해야 한다",
+    "target.후보수 가 2 이상이면 target.article_iri 는 비어 있어야 한다 — 동일 조번호 후보 중 하나를 고르는 것은 추측이다",
+    "kind 가 범위이면 range 가 있어야 하고, resolution 이 범위전개이면 range.expanded 가 비어 있지 않아야 한다",
+    "range.expanded 의 조문은 전부 그 문서의 조문 트리에 실재해야 한다 — 양 끝이 실재할 때만 전개한다",
+    "kind 가 별표이면 target.annex 가 있어야 하고, 별지·서식이면 target.form 이 있어야 한다",
+    "kind 가 준용이면 scope 는 미판정이고 격리되어야 한다. 대상이 있는 준용은 kind 가 아니라 relation 이 담는다",
+    "scope_basis 가 편장절실재이면 kind 는 내부표목이고 target.heading 에 정규화한 편·장·절(`제3편`·`제5편 제1장`)이 있어야 한다. 편·장·절 표기가 조문 참조의 한정어로 쓰인 경우(`제1편 제1장 제12조`)는 그 조문 레코드가 담으므로 따로 만들지 않는다",
+    "article_origin 이 조문헤딩이면 article_iri·article_no·article_label 이 모두 있어야 한다",
+    "xref_by_article.by_article 의 xref_ids 합집합은 xref_index.xrefs 의 xref_id 전건과 같아야 한다",
+    "xref_by_article.by_target 의 참조수 합은 xref_index 참조수에서 대상키 미발급분을 뺀 값과 같아야 한다",
+    "legal-statute 의 statute_citations.json 과 인용 건수를 나란히 비교하지 않는다. 그쪽은 terms.json 정의문이, 이쪽은 조문 본문 전체가 모수다",
+    "table_refs.meta.모수.해소 는 간선 길이와 같아야 한다",
+    "table_refs.meta.모수.격리 는 _table_refs_report.격리 길이와 같아야 한다",
+    "table_refs.meta.모수.표참조_플래그_조문수 는 두 파일에서 같아야 한다(같은 실행이 낸 meta 쌍이다)",
+    "간선[].표ID·격리[].후보[].표ID 는 output/legal/table/tables.csv 의 표ID 열에 실재해야 한다",
+    "간선[].표ID 의 지구번호 접두는 그 레코드의 지구번호 필드와 같아야 한다",
+    "같은 (지구번호, 조번호, 행, 마커유형, 정규화라벨) 조합은 간선과 격리를 합쳐 정확히 1개여야 한다 — 조문 안 같은 라벨당 레코드 하나(해소 아니면 격리)",
+    "정규화라벨에 숫자가 없는 레코드는 격리이고 사유가 표기해석불가여야 한다. 숫자가 있는 레코드가 표기해석불가이면 안 된다",
+    "매칭방법=분책좁힘 인 간선은 매칭근거.원본파일_추정·전체후보수 를 모두 가져야 하고 전체후보수 ≥ 2 여야 한다",
+    "사유=후보다중 인 격리는 후보가 2개 이상이어야 한다",
+    "_table_refs_report.격리_사유별_집계 의 값 합은 격리 길이와 같아야 하고, 키 집합은 값도메인.table_refs.격리사유 의 부분집합이어야 한다",
+    "이 산출물은 xref_index.json·_xref_report.json 과 모수가 다르다(건축부문 표참조 마커 대 조문 본문 참조 전체). crossFileConstraints 를 나란히 적용하지 않는다"
+  ],
+  "verifyRoutine": [
+    "스키마·값 도메인·교차 제약 — scripts/verify_contract.py",
+    "--full 은 참조 표기가 근거 발췌와 원문 줄에 실재하는지까지 대조한다 (환각 전수 검사). table_refs 는 --full 에서 표ID 를 tables.csv 로, 원본파일_추정 을 md 경계 주석으로 대조한다",
+    "_xref_report.json 의 사유별 분포를 보고 판정 규칙의 구멍을 가른다. `근거없음` 이 늘면 어휘 학습이나 내부 판정 근거가 부족한 것이다",
+    "법령정본_미수록 목록을 legal-statute 의 collect_statutes.py 입력으로 되돌려 법령 정본을 늘린다",
+    "산출물을 갱신하면 build_article_index.py 를 다시 돌린다. 역인덱스가 옛 xref_id 를 가리키면 교차 제약에서 걸린다",
+    "_table_refs_report.json 의 대상없음 비중이 크면 output/legal/table/_table_loss.json 의 소실표건수 와 지구 단위로 대조해 매칭 결함인지 원본 표 유실인지 가른다"
+  ]
+}

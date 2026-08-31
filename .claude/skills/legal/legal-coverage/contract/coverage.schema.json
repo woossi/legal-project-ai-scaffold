@@ -1,0 +1,167 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "_coverage.json — 파이프라인 단계별 커버리지 집계",
+  "type": "object",
+  "required": ["meta", "stages", "격리", "재계산필드", "어긋남", "사각지대", "대조표"],
+  "additionalProperties": false,
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": ["생성근거", "스크립트", "모수정의_정본", "집계시각_미기재_사유",
+                   "단계수", "집계", "미집계"],
+      "additionalProperties": false,
+      "properties": {
+        "생성근거": { "type": "string", "minLength": 1 },
+        "스크립트": { "type": "string", "minLength": 1 },
+        "모수정의_정본": {
+          "const": ".claude/skills/legal/legal-term/case/모수규약.md",
+          "$comment": "모수 정의는 legal-term 이 정본이다. 여기서 복제하지 않는다"
+        },
+        "집계시각_미기재_사유": { "type": "string", "minLength": 1 },
+        "단계수": { "type": "integer", "minimum": 1 },
+        "집계": { "type": "integer", "minimum": 0 },
+        "미집계": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "stages": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["stage_id", "단계", "상태", "분자", "분모", "비율",
+                     "분자_정의", "분모_정의", "분모_출처단계", "정본",
+                     "입력_생성근거", "격리", "제외시", "비고"],
+        "additionalProperties": false,
+        "properties": {
+          "stage_id": { "type": "string", "pattern": "^S[0-9]+$" },
+          "단계": { "type": "string", "minLength": 1 },
+          "상태": {
+            "enum": ["집계", "미집계"],
+            "$comment": "입력이 없어 못 센 단계는 미집계다. 실패가 아니며 0 도 아니다"
+          },
+          "분자": { "type": ["integer", "null"], "minimum": 0 },
+          "분모": { "type": ["integer", "null"], "minimum": 0 },
+          "비율": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+          "분자_정의": { "type": "string", "minLength": 1 },
+          "분모_정의": {
+            "type": "string",
+            "minLength": 1,
+            "$comment": "비율을 적을 때는 분모를 함께 적는다. 분모 없는 비율은 쓰지 않는다"
+          },
+          "분모_출처단계": { "type": ["string", "null"], "pattern": "^S[0-9]+$" },
+          "정본": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+          "입력_생성근거": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["파일"],
+              "properties": { "파일": { "type": "string", "minLength": 1 } }
+            }
+          },
+          "격리": {
+            "type": "object",
+            "$comment": "저신뢰·OCR 유래 건수. 확정분과 섞어 집계하지 않는다"
+          },
+          "제외시": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["제외", "분자", "분모", "비율"],
+              "additionalProperties": false,
+              "properties": {
+                "제외": { "type": "string", "minLength": 1 },
+                "분자": { "type": "integer", "minimum": 0 },
+                "분모": { "type": "integer", "minimum": 0 },
+                "비율": { "type": ["number", "null"], "minimum": 0, "maximum": 1 }
+              }
+            }
+          },
+          "미집계사유": { "type": "string", "minLength": 1 },
+          "비고": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "격리": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["정본", "구분", "건수"],
+        "additionalProperties": false,
+        "properties": {
+          "정본": { "type": "string", "minLength": 1 },
+          "구분": { "type": "string", "minLength": 1 },
+          "건수": { "type": "integer", "minimum": 0 },
+          "모수": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "재계산필드": {
+      "type": "array",
+      "$comment": "다른 파일의 동명 필드를 다시 센 값. 나란히 비교하지 않는다",
+      "items": {
+        "type": "object",
+        "required": ["필드명", "값", "비교금지_사유"],
+        "additionalProperties": false,
+        "properties": {
+          "필드명": { "type": "string", "minLength": 1 },
+          "값": { "type": "object" },
+          "비교금지_사유": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "어긋남": {
+      "type": "array",
+      "$comment": "한 파일 안에서 요약과 원자료가 어긋난 것. 고치지 않고 남긴다",
+      "items": {
+        "type": "object",
+        "required": ["파일", "필드", "대조범위", "기재", "재계산", "판정"],
+        "additionalProperties": false,
+        "properties": {
+          "파일": { "type": "string", "minLength": 1 },
+          "필드": { "type": "string", "minLength": 1 },
+          "대조범위": {
+            "const": "파일내부",
+            "$comment": "대조하는 두 값이 같은 파일 안에 있어야 한다. 파일 간 동명 필드는 재계산 필드이므로 어긋남으로 세지 않는다"
+          },
+          "기재": {},
+          "재계산": { "type": "object" },
+          "판정": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "사각지대": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "대조표": {
+      "type": ["object", "null"],
+      "required": ["기준", "변경", "핵심결론_뒤집힘", "판정근거"],
+      "additionalProperties": false,
+      "properties": {
+        "기준": { "type": ["string", "null"] },
+        "변경": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["stage_id", "단계"],
+            "additionalProperties": false,
+            "properties": {
+              "stage_id": { "type": "string", "pattern": "^S[0-9]+$" },
+              "단계": { "type": "string", "minLength": 1 },
+              "필드": { "enum": ["상태", "분자", "분모", "비율"] },
+              "이전": {},
+              "이후": {},
+              "변화": { "enum": ["신규 단계", "사라진 단계"] }
+            }
+          }
+        },
+        "핵심결론_뒤집힘": {
+          "enum": ["변화없음", "검토필요"],
+          "$comment": "관측 요약이다. 결론이 실제로 뒤집히는지는 소유자가 한 줄로 답한다"
+        },
+        "판정근거": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

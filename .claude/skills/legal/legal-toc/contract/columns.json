@@ -1,0 +1,58 @@
+{
+  "$comment": "output/legal/analysis/시행지침_목차구조_전수조사.csv 의 열 계약. enum 은 실측 관측값(189건)이며, 새 값이 나오면 판정 로직이 바뀐 것이므로 계약을 먼저 갱신한다.",
+  "outBase": "output/legal/analysis",
+  "file": "시행지침_목차구조_전수조사.csv",
+  "encoding": "utf-8-sig",
+  "keyColumn": "지구번호",
+  "columns": [
+    { "name": "지구명", "type": "string", "required": true },
+    { "name": "지구번호", "type": "string", "required": true, "unique": true },
+    { "name": "지역", "type": "enum", "values": ["서울", "인천", "경기"] },
+    { "name": "근거법령", "type": "string" },
+    { "name": "시행자", "type": "string" },
+    { "name": "사업기간", "type": "string" },
+    {
+      "name": "최상위단위",
+      "type": "enum",
+      "values": ["편", "부문", "장(원본 파일명)", "부문(장블록)", "장", "조", "블록(편묶음)", "없음"],
+      "note": "판정 순서대로 내려가며 처음 걸리는 것. '없음'은 판정 불가"
+    },
+    { "name": "최상위개수", "type": "int", "min": 0 },
+    { "name": "편수", "type": "int", "min": 0, "note": "헤딩만으로는 과소계상된다. 헤딩·상호참조·자기선언의 최댓값" },
+    { "name": "부문수", "type": "int", "min": 0 },
+    { "name": "장수", "type": "int", "min": 0, "note": "블록별 고유 번호로 센다. 원시 헤딩 수로 세면 반복분이 부풀린다" },
+    { "name": "절수", "type": "int", "min": 0 },
+    { "name": "조수", "type": "int", "min": 0 },
+    { "name": "편블록구성", "type": "string" },
+    { "name": "장블록구성", "type": "string" },
+    { "name": "다중블록여부", "type": "string" },
+    { "name": "유형", "type": "string", "note": "구조 유형 10종. case/문서실태.md 참조" },
+    {
+      "name": "구조출처",
+      "type": "enum",
+      "values": ["본문", "목차(본문 계층헤딩 유실)"],
+      "note": "본문에 계층이 없을 때만 목차 헤딩으로 대체 판정하고 그 사실을 여기 남긴다"
+    },
+    { "name": "신뢰도", "type": "string" },
+    { "name": "신뢰도사유", "type": "string" },
+    { "name": "근거등급", "type": "string" },
+    { "name": "근거등급사유", "type": "string", "note": "'지침의 구성' 나열 블록만으로 편 표제가 존재하는 경우 그 사실을 여기 적는다" },
+    { "name": "OCR여부", "type": "string" },
+    { "name": "OCR구조판정보류", "type": "string" },
+    { "name": "구성문서수", "type": "int", "min": 1 },
+    { "name": "표마커", "type": "int", "min": 0 },
+    { "name": "행수", "type": "int", "min": 0 },
+    { "name": "본문제N조평문", "type": "string" },
+    { "name": "최상위목록", "type": "string", "note": "같은 번호 후보가 여럿이면 하위 단위 표기가 없고 짧은 것을 대표로" }
+  ],
+  "rowConstraints": [
+    "지구번호는 유일하다",
+    "최상위단위 == '없음' 이면 최상위개수 == 0",
+    "최상위단위 == '편' 이면 편수 >= 1",
+    "구조출처 == '목차(본문 계층헤딩 유실)' 인 행은 본문 계층이 없다는 뜻이므로 사유가 기록돼야 한다"
+  ],
+  "crossFileConstraints": [
+    "지구번호 집합은 output/legal/markdown/ 의 md frontmatter 지구번호 집합과 일치해야 한다",
+    "md 가 있는데 행이 없으면 누락, 행이 있는데 md 가 없으면 유령 행이다"
+  ]
+}

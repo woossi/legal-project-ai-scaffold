@@ -1,0 +1,64 @@
+{
+  "$comment": "output/legal/analysis/_coverage.json 의 계약. 파이프라인 단계마다 모수가 다르므로 단계별 분자·분모와 정본 경로를 한자리에 고정한다. 모수 정의 자체의 정본은 legal-term/case/모수규약.md 이며 여기서는 집계 절차만 정한다 — 두 곳이 같은 값을 정하면 반드시 어긋난다.",
+  "outBase": "output/legal/analysis",
+  "files": {
+    "_coverage.json": {
+      "required": true,
+      "schema": "coverage.schema.json",
+      "role": "파이프라인 단계별 커버리지. 단계마다 분자·분모·정본 경로·입력 파일의 생성근거를 담고, 저신뢰·OCR 유래 건을 갈라 제외 시 수치를 함께 낸다",
+      "generator": "scripts/build_coverage.py",
+      "topKeys": [
+        "meta",
+        "stages",
+        "격리",
+        "재계산필드",
+        "어긋남",
+        "사각지대",
+        "대조표"
+      ],
+      "constraint": "리포트 파일(_*.json)이다. 결손이 아니라 기록이며, 여기 실린 미집계·격리 건수를 결손으로 옮겨 적지 않는다"
+    }
+  },
+  "preconditions": [
+    "S1·S2 — output/legal/시행지침/{meta.json, 서울/_index.json, 인천/_index.json, 경기/_index.json}",
+    "S3 — output/legal/markdown/**/*.md (legal-textreform 산출)",
+    "S4·S5 — output/legal/word/{terms.json, doc_definitions.json, _extraction_report.json, _low_confidence_review.json, _ocr_only_terms.json} (legal-term 산출)",
+    "S6 — output/kb/reports/_guideline_tree.json 과 output/kb/graph/det/guideline.ttl (kb 산출)",
+    "S7 — output/legal/statute/{statute_citations.json, statute_master.json, _statute_report.json, _collect_report.json} (legal-statute 산출)",
+    "S8·S9 — output/kb/graph/{det,prob}/*.ttl",
+    "격리 요약 — output/legal/analysis/시행지침_목차구조_전수조사.csv (legal-toc 산출)",
+    "선행 산출물이 없는 단계는 미집계로 기록하고 계속 진행한다. 선행조건 미충족이 생성 실패 사유가 되지 않는다"
+  ],
+  "idempotency": [
+    "같은 입력이면 같은 바이트가 나온다. 집계 시각을 담지 않으며 입력 파일이 스스로 밝힌 생성근거만 옮긴다",
+    "stages 는 stage_id 오름차순 고정. 격리·재계산필드·어긋남·사각지대의 순서도 스크립트가 고정한다",
+    "비율은 소수 4자리로 반올림한다. 자리수를 바꾸면 이전 리포트와의 대조표가 통째로 흔들린다"
+  ],
+  "valueDomains": {
+    "stages[].상태": ["집계", "미집계"],
+    "stages[].stage_id": "^S[0-9]+$",
+    "stages[].분모_출처단계": "^S[0-9]+$ 또는 null (앞 단계에서 분모를 물려받지 않는 단계)",
+    "대조표.핵심결론_뒤집힘": ["변화없음", "검토필요"],
+    "$comment": "새 상태값이 나오면 판정 로직이 바뀐 것이므로 계약을 먼저 갱신한다"
+  },
+  "crossFileConstraints": [
+    "stages[].분모_출처단계가 가리키는 단계의 분자와 이 단계의 분모가 같아야 한다 — 단계 사슬이 끊기면 비율의 뜻이 달라진다",
+    "stages[].분모는 분자보다 작을 수 없다",
+    "상태가 집계이면 분자가 있어야 하고, 미집계이면 분자·분모·비율이 모두 null 이며 미집계사유가 있어야 한다 — 못 센 것을 0 으로 적지 않는다",
+    "분모가 null 이면 비율도 null 이어야 한다 — 분모 없는 비율은 쓰지 않는다",
+    "비율은 분자/분모를 소수 4자리로 반올림한 값과 같아야 한다",
+    "제외시[].분모는 그 단계의 분모보다 크지 않아야 하고, 제외시[].분자는 그 단계의 분자보다 크지 않아야 한다",
+    "격리[].건수는 모수가 있으면 모수를 넘지 않아야 한다",
+    "stages[].정본과 입력_생성근거[].파일 은 저장소 안에 실재해야 한다 — 없는 파일을 근거로 적지 않는다",
+    "meta.집계 + meta.미집계 = meta.단계수 = stages 길이",
+    "meta.모수정의_정본은 .claude/skills/legal/legal-term/case/모수규약.md 여야 한다. 모수 정의를 이 스킬이 복제하면 두 정본이 생긴다",
+    "어긋남[]은 같은 파일 안의 meta 요약과 그 파일 원자료의 불일치만 담는다. 파일 간 동명 필드는 재계산필드[]에 두고 어긋남으로 세지 않는다",
+    "사각지대는 비어 있을 수 없다 — 이 집계가 보지 못하는 범위를 함께 적지 않으면 커버리지 수치가 안전 보증으로 읽힌다"
+  ],
+  "verifyRoutine": [
+    "구조·값 도메인·교차 제약 — scripts/verify_contract.py",
+    "--strict 는 어긋남이 남아 있으면 실패로 돌린다. 기본값은 통과이며 어긋남은 고칠 대상이 아니라 보고할 대상이다",
+    "어긋남 목록이 늘어나면 상류 산출물의 meta 요약이 갱신 전 값이라는 뜻이다. _coverage.json 을 고치지 말고 상류 소유자에게 넘긴다",
+    "집계가 바뀌면 --baseline 으로 전후 대조표를 함께 내고, 핵심 결론이 뒤집히는지에 한 줄로 답한다"
+  ]
+}

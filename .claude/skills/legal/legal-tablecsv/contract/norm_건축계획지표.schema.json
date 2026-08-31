@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "norm_건축계획지표.schema.json",
+  "title": "norm_건축계획지표.csv 행 배열",
+  "$comment": "CSV를 utf-8-sig로 읽은 뒤 각 행을 문자열 값의 객체로 바꾸어 이 스키마에 대조한다. 열 순서는 outputs.json이 별도로 정한다.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "지구번호",
+      "주체",
+      "주체유형",
+      "지표명",
+      "한도구분",
+      "값_원문",
+      "값_수치",
+      "단위",
+      "단서",
+      "파싱실패사유",
+      "표ID",
+      "추출경로",
+      "품질등급"
+    ],
+    "properties": {
+      "지구번호": {
+        "type": "string",
+        "minLength": 1
+      },
+      "주체": {
+        "type": "string",
+        "minLength": 1
+      },
+      "주체유형": {
+        "enum": ["블록", "획지", "주택유형", "용지", "도면표시", "미상"]
+      },
+      "지표명": {
+        "enum": ["부지면적", "세대수", "건폐율", "용적률", "층수", "높이"]
+      },
+      "한도구분": {
+        "enum": ["최고", "최저", "확정"]
+      },
+      "값_원문": {
+        "type": "string",
+        "minLength": 1
+      },
+      "값_수치": {
+        "type": "string",
+        "pattern": "^(?:|(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?)$"
+      },
+      "단위": {
+        "enum": ["㎡", "호", "%", "층", "m"]
+      },
+      "단서": {
+        "type": "string"
+      },
+      "파싱실패사유": {
+        "type": "string"
+      },
+      "표ID": {
+        "type": "string",
+        "minLength": 1
+      },
+      "추출경로": {
+        "enum": ["hwp5html", "pdfplumber", "OCR"]
+      },
+      "품질등급": {
+        "enum": ["텍스트", "OCR"]
+      }
+    }
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "legal-dup/master.schema.json",
+  "title": "BLS5_DSTRC_MASTER source snapshot manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "table", "capturedAt", "source", "asset", "archive", "csv"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "table": {"const": "BLS5_DSTRC_MASTER"},
+    "capturedAt": {"type": "string", "format": "date-time"},
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "mode", "page", "listEndpoint", "downloadUrl", "usageProfileStored"],
+      "properties": {
+        "kind": {"const": "jigu-file-data"},
+        "mode": {"enum": ["manual", "official-form"]},
+        "page": {"const": "https://openapi.jigu.go.kr/down/detail.do?table=BLS5_DSTRC_MASTER"},
+        "listEndpoint": {"const": "https://openapi.jigu.go.kr/api/list.json"},
+        "downloadUrl": {"type": "string", "pattern": "^https://openapi\\.jigu\\.go\\.kr/openApi/down\\.do\\?"},
+        "usageProfileStored": {"const": false}
+      }
+    },
+    "asset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fileNo", "fileTy", "fileNm", "stdrDe", "dt", "ctprvn", "ctprvnNm", "ntfcDe", "totcnt"],
+      "properties": {
+        "fileNo": {"type": "integer", "minimum": 1},
+        "fileTy": {"const": "csv"},
+        "fileNm": {"type": "string", "minLength": 1},
+        "stdrDe": {"type": "string", "pattern": "^[0-9]{8}$"},
+        "dt": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"},
+        "ctprvn": {"const": "00"},
+        "ctprvnNm": {"const": "전국"},
+        "ntfcDe": {"type": "string", "minLength": 1},
+        "totcnt": {"type": "integer", "minimum": 0}
+      }
+    },
+    "archive": {"$ref": "#/$defs/file"},
+    "csv": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fileName", "bytes", "sha256", "encoding", "columns", "rowCount", "uniqueDistrictCount"],
+      "properties": {
+        "fileName": {"type": "string", "minLength": 1, "pattern": "^[^/\\\\]+$"},
+        "bytes": {"type": "integer", "minimum": 1},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "encoding": {"enum": ["utf-8-sig", "cp949"]},
+        "columns": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "contains": {"const": "DSTRC_APPN_NO"}
+        },
+        "rowCount": {"type": "integer", "minimum": 0},
+        "uniqueDistrictCount": {"type": "integer", "minimum": 0}
+      }
+    }
+  },
+  "$defs": {
+    "file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fileName", "bytes", "sha256"],
+      "properties": {
+        "fileName": {"type": "string", "minLength": 1, "pattern": "^[^/\\\\]+$"},
+        "bytes": {"type": "integer", "minimum": 1},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    }
+  }
+}

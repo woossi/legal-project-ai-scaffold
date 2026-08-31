@@ -1,0 +1,130 @@
+{
+  "$comment": "output/legal/word/ 산출물 목록과 교차 제약. required=false 는 아직 생성되지 않았거나 선택 산출물.",
+  "outBase": "output/legal/word",
+  "files": {
+    "terms.json": {
+      "required": true,
+      "schema": "terms.schema.json",
+      "role": "메인. 용어별 variants·occurrences·4개 분류축"
+    },
+    "core_terms.json": {
+      "required": true,
+      "schema": "terms.schema.json#/$defs/core_terms_document",
+      "role": "df>=18 경량본",
+      "constraint": "terms[].id 는 terms.json 의 부분집합"
+    },
+    "taxonomy.json": {
+      "required": true,
+      "schema": null,
+      "role": "4개 축 기준서 (유형별 정의·포함/배제기준·경계사례)",
+      "topKeys": [
+        "meta",
+        "axis_A",
+        "axis_B",
+        "axis_C",
+        "axis_D",
+        "definition_variance"
+      ]
+    },
+    "concept_relations.json": {
+      "required": true,
+      "schema": null,
+      "role": "유형 간 관계 초안. 각 instance 에 정의문 원문 근거 + 출처 지구번호",
+      "topKeys": [
+        "meta",
+        "relations"
+      ]
+    },
+    "_low_confidence_review.json": {
+      "required": true,
+      "schema": null,
+      "role": "분류 저신뢰 건 검토표",
+      "constraint": "classification.classification_confidence 가 high 가 아닌 건을 담는다"
+    },
+    "_ocr_only_terms.json": {
+      "required": true,
+      "schema": null,
+      "role": "OCR 문서에만 있는 용어 (유령 용어 격리)",
+      "topKeys": [
+        "meta",
+        "terms"
+      ]
+    },
+    "_extraction_report.json": {
+      "required": true,
+      "schema": null,
+      "role": "문서별 결과, 제외 사유, 게이트 기록, OCR 처리 이력",
+      "topKeys": [
+        "meta",
+        "summary",
+        "매칭모드_분포",
+        "documents",
+        "정의조항_없는_문서",
+        "용어추출_제외_문서"
+      ]
+    },
+    "definiation.json": {
+      "required": true,
+      "schema": "definitions.schema.json",
+      "role": "정의 조항 용어집. 용어 하나에 정의 하나 + 재추출 시 건너뛸 조 표제 목록",
+      "generator": "scripts/build_definitions.py → scripts/canonicalize.py",
+      "topKeys": [
+        "meta",
+        "definition_articles",
+        "definitions"
+      ],
+      "constraint": "definitions[].id 는 terms.json 의 부분집합. 파일명 definiation 은 오탈자이나 이미 확정된 경로라 유지한다"
+    },
+    "doc_definitions.json": {
+      "required": true,
+      "schema": "doc_definitions.schema.json",
+      "role": "문서 단위 정의 레코드. 레코드마다 원본 문서(source_file)·요약 정의·class='법률 용어'",
+      "generator": "scripts/build_doc_definitions.py",
+      "topKeys": [
+        "meta",
+        "records"
+      ],
+      "constraint": "records[].term_id 는 terms.json 의 부분집합. definition 은 definition_source_text 의 연속 부분문자열"
+    },
+    "terms_by_concept.json": {
+      "required": false,
+      "schema": null,
+      "role": "primary 축(concept_type)별 뷰 + 편중 진단",
+      "status": "미생성 (2026-08-03 기준). 생성 시 required 를 true 로 올린다"
+    },
+    "terms_by_district.json": {
+      "required": false,
+      "schema": null,
+      "role": "지구 -> 용어 id (용어 0건 지구도 사유와 함께 포함)",
+      "status": "미생성 (2026-08-03 기준). 생성 시 required 를 true 로 올린다"
+    }
+  },
+  "crossFileConstraints": [
+    "terms.json 외 파일이 참조하는 용어 id 는 모두 terms.json 에 존재해야 한다",
+    "모든 variant.text 는 districts[] 중 최소 한 지구의 md 에 부분문자열로 존재해야 한다 — variant 는 여러 지구에 걸쳐 병합되고 대표 문자열은 그중 한 문서의 표기를 따르므로, districts[0] 만 대조하면 정상 데이터가 불일치로 잡힌다",
+    "원문 대조 시 md 쪽에 meta.정의문_저장시_변형규칙 과 같은 정규화를 적용한다(** 제거, > [표]·[그림] 마커 줄 제거, 연속 공백 합치기). 이를 맞추지 않으면 대량 오탐이 난다",
+    "공백 삽입/제거 차이(`정 한` vs `정한`)는 원문 조판 아티팩트이므로 불일치로 보지 않는다 — 계약은 어휘 보존이지 공백 보존이 아니다",
+    "cited_laws 가 비어 있지 않은데 classification.legal_status == 지침고유 이면 자기모순",
+    "district_ratio_adj 의 분모는 meta.정의문_추출성공_문서수 이며 대상문서수 이하",
+    "occurrences[].variant_index 는 variants[].variant_index 에 존재해야 한다",
+    "occurrence_count == occurrences 의 길이, doc_frequency == occurrences 의 고유 dstrcAppnNo 수",
+    "definiation.json 의 정의조항 판정은 terms.json 의 in_definition_article 보다 넓다 — 순수 '(정의)'·'…의 용어에 관한 사항'·'…에 관한 용어' 표제를 추가로 인정한다. 두 파일의 정의문 수가 다른 것은 정상이며, definiation.json 쪽이 항상 크거나 같아야 한다",
+    "definiation.json 의 doc_frequency·district_ratio_def·ubiquity 는 정의 조항 소속 occurrence 만의 값이라 terms.json 의 doc_frequency·district_ratio_adj·classification.ubiquity 와 다르다. 같은 이름으로 비교하지 말 것",
+    "definiation.json 의 district_ratio_def 분모는 meta.정의조항_보유문서수 이며 대상문서수 이하",
+    "definiation.json 의 definitions[].classification 에는 ubiquity·source_article_* 를 남기지 않는다 — 자체 재계산 값과 경합한다",
+    "definiation.json 은 용어당 정의 하나다. 수치·요건 서명이 다를 때만 variants_by_rule 로 갈래를 남기며, 갈래는 2개 이상이어야 의미가 있다",
+    "definiation.json 의 definition 은 갈래가 있으면 최다 지구 갈래의 것과 같아야 한다",
+    "definiation.json 의 meta.정의문수 는 정의 개수(용어수 + 갈래 추가분)이고, meta.통합전_정의문수 가 occurrence 총계다 — 둘을 혼동하지 말 것",
+    "terms.json 의 occurrence.file 은 생성 시점 파일명 규약이라 실존을 보장하지 않는다 — 문서 경로는 (region, dstrcNm) 으로 재해석한다. (region, dstrcNm) 의 고유성은 실측 확인되었다",
+    "doc_definitions.json 의 definition(요약)은 재작성이 아니라 절단이다 — definition_source_text 의 연속 부분문자열이어야 한다. class 는 '법률 용어' 고정이다",
+    "doc_definitions.json 의 definition_source_text 는 변이 병합의 대표 표기다 — 해당 문서 표기와 구두점 수준에서 다를 수 있다. 원문 대조는 해당 문서(현재 md → 절삭 이전 md, git f9b8a45^) → 같은 변이의 타 지구 md 순으로 소명하며, 마지막 단계 일치는 경고로 남긴다",
+    "doc_definitions.json 과 definiation.json 의 정의조항_보유문서수는 같아야 한다 — 같은 조 표제 재판정을 쓴다"
+  ],
+  "verifyRoutine": [
+    "전수 무결성 — 모든 variant 정의문이 해당 지구 md 에 문자열 그대로 있는가",
+    "무작위 30건 — 지역별 10건씩 원문 재파싱으로 정의문·표제어·조 표제 귀속 확인",
+    "파일 간 정합성 — 나머지 파일이 참조하는 id 가 terms.json 에 다 있는가",
+    "definiation.json — 스키마·교차제약은 scripts/verify_definitions.py 로 본다",
+    "doc_definitions.json — 스키마·교차제약·원문 대조는 scripts/verify_doc_definitions.py 로 본다"
+  ]
+}

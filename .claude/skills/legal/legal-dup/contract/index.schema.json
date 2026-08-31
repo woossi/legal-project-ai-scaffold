@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "legal-dup/index.schema.json",
+  "title": "output/legal/시행지침/<지역>/_index.json",
+  "description": "collect.py index --region <지역> 의 산출물. 지구 1건 처리마다 전체 재기록되므로 중단 시점의 부분 결과도 이 스키마를 만족한다.",
+  "type": "object",
+  "required": ["region", "scannedAt", "total", "indexed", "items"],
+  "additionalProperties": false,
+  "properties": {
+    "region": { "enum": ["서울", "인천", "경기"] },
+    "scannedAt": { "type": "string", "format": "date-time" },
+    "total": { "type": "integer", "minimum": 0, "description": "목록 응답의 전체 지구 수" },
+    "indexed": { "type": "integer", "minimum": 0, "description": "실제로 상세 조회를 마친 수. 중단 시 total 미만" },
+    "items": { "type": "array", "items": { "$ref": "#/$defs/dstrc" } }
+  },
+  "$defs": {
+    "dstrc": {
+      "type": "object",
+      "description": "목록 응답 원본 필드 19개 + region + attachments. 원본 키는 덮어쓰지 않는다. 3개 지역 전 지구에서 이 21개 키가 예외 없이 관측됐으므로 닫아 둔다 — 상류 응답에 필드가 추가되면 검증이 실패하고, 그때 스키마를 갱신한다.",
+      "additionalProperties": false,
+      "required": [
+        "num", "dstrcAppnNo", "dstrcNm", "lcCode", "lawordCode", "ctprvnNm",
+        "lawordNm", "stepCode", "stepNm", "centerx", "centery",
+        "minx", "miny", "maxx", "maxy", "ar", "bsnsOpertnPd",
+        "opertnProfsNm", "newtownNm", "region", "attachments"
+      ],
+      "properties": {
+        "num": { "type": "integer" },
+        "dstrcAppnNo": { "type": "string", "minLength": 1, "description": "지구 고유 키. 상세·다운로드 호출의 파라미터명도 dstrcAppnNo다" },
+        "dstrcNm": { "type": "string", "minLength": 1 },
+        "lcCode": { "type": ["string", "null"] },
+        "lawordCode": { "type": ["string", "null"] },
+        "ctprvnNm": { "type": ["string", "null"] },
+        "lawordNm": { "type": ["string", "null"], "description": "근거 법령명 (택지개발촉진법 등)" },
+        "stepCode": { "type": ["string", "null"] },
+        "stepNm": { "type": ["string", "null"] },
+        "centerx": { "type": ["number", "string", "null"] },
+        "centery": { "type": ["number", "string", "null"] },
+        "minx": { "type": ["number", "string", "null"] },
+        "miny": { "type": ["number", "string", "null"] },
+        "maxx": { "type": ["number", "string", "null"] },
+        "maxy": { "type": ["number", "string", "null"] },
+        "ar": { "type": ["number", "string", "null"], "description": "면적" },
+        "bsnsOpertnPd": { "type": ["string", "null"] },
+        "opertnProfsNm": { "type": ["string", "null"] },
+        "newtownNm": { "type": ["string", "null"] },
+        "region": { "enum": ["서울", "인천", "경기"] },
+        "attachments": {
+          "type": "array",
+          "description": "빈 배열이 정상이다 — 대부분의 지구는 첨부 미등록",
+          "items": { "$ref": "#/$defs/attachment" }
+        }
+      }
+    },
+    "attachment": {
+      "type": "object",
+      "required": ["fileCode", "fileRegistNo", "label"],
+      "additionalProperties": false,
+      "properties": {
+        "fileCode": { "type": "string", "minLength": 1 },
+        "fileRegistNo": {
+          "type": "string",
+          "pattern": "^[0-9]+$",
+          "description": "2 위치도 / 3 광역교통계획도 / 4 토지이용계획도 / 5 지구단위계획도 / 7 시행지침. 표본 미관측 코드도 허용한다"
+        },
+        "label": {
+          "type": "string",
+          "description": "응답 HTML에서 파싱한 값. 코드→라벨 하드코딩 매핑으로 채우지 않는다"
+        }
+      }
+    }
+  }
+}

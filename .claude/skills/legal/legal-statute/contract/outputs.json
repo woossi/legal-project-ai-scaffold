@@ -1,0 +1,214 @@
+{
+  "$comment": "output/legal/statute/ 산출물 목록과 교차 제약. 법령 노드는 kb 온톨로지의 결정론층 입력이다. 법령의 정본성은 법제처 OPEN API 가 공급하며 사례 문서 표기에서 추론하지 않는다.",
+  "outBase": "output/legal/statute",
+  "files": {
+    "guideline_article_scope.json": {
+      "required": true,
+      "schema": null,
+      "role": "189개 시행지침 일반 조문 전체에서 관측한 외부 규범 수집 범위. 정본 인용 간선이 아니라 선행 범위 감사다",
+      "generator": "scripts/build_guideline_article_scope.py",
+      "topKeys": [
+        "meta",
+        "scope_contract",
+        "summary",
+        "sources",
+        "mentions",
+        "relative_references",
+        "generic_references",
+        "documents"
+      ],
+      "constraint": "첫 h4 조문 전 본문은 unassigned_document_preamble로, h4 조문이 없는 문서는 fallback_unsegmented_document로 보존한다. source_name_hint는 원문 표기이며 정식명칭으로 승격하지 않는다"
+    },
+    "guideline_article_scope.md": {
+      "required": true,
+      "schema": null,
+      "role": "일반 조문 수집 범위, T1~T4 크롤링 폐쇄 규칙, 옥외광고물 표적 사례의 사람이 읽는 요약",
+      "generator": "scripts/build_guideline_article_scope.py"
+    },
+    "guideline_source_article_corpus.jsonl.gz": {
+      "required": true,
+      "schema": null,
+      "role": "189개 시행지침의 실재 h4 조문, 선행본문, 비구조화 fallback 본문 전문과 원문 줄범위·해시",
+      "generator": "scripts/build_guideline_article_scope.py",
+      "constraint": "각 단위 text는 source_file의 line_start~line_end 원문과 같고 text_sha256이 일치해야 한다"
+    },
+    "guideline_article_scope_review.json": {
+      "required": true,
+      "schema": null,
+      "role": "원 Markdown 전체본문을 독립 경로로 다시 스캔한 적대 검수와 공식 API·선분류·수동·내부참조·격리 큐",
+      "generator": "scripts/review_guideline_article_scope.py",
+      "constraint": "independent_direct_quote_missing_count와 structural_error_count는 모두 0이어야 한다"
+    },
+    "guideline_statute_master.json": {
+      "required": true,
+      "schema": null,
+      "role": "시행지침 직접범위 외부자료의 현행 정본 대조 결과. 미대조 표기는 정본 필드를 비운다",
+      "generator": "scripts/collect_guideline_articles.py"
+    },
+    "guideline_article_corpus.jsonl.gz": {
+      "required": true,
+      "schema": null,
+      "role": "직접범위에서 정본대조된 법령·자치법규·행정규칙의 현행 전문과 전 조문 계층",
+      "generator": "scripts/collect_guideline_articles.py",
+      "constraint": "정본 문서마다 최소 1개 본문 단위가 있고 application_version_unresolved=true여야 한다"
+    },
+    "_guideline_crawl_report.json": {
+      "required": true,
+      "schema": null,
+      "role": "직접범위 크롤링 상태·차단회로·캐시 정책·미대조 목록",
+      "generator": "scripts/collect_guideline_articles.py"
+    },
+    "guideline_t4_scope.json": {
+      "required": true,
+      "schema": null,
+      "role": "직접범위 정본 조문이 명시적으로 인용한 자료명+조문 단위의 1단계 파생범위",
+      "generator": "scripts/build_guideline_t4_scope.py",
+      "constraint": "T4에서 다시 발견한 인용은 재귀 확장하지 않으며 직접 관측과 섞지 않는다"
+    },
+    "guideline_t4_statute_master.json": {
+      "required": true,
+      "schema": null,
+      "role": "T4 1단계 파생범위의 현행 정본 대조 결과",
+      "generator": "scripts/collect_guideline_articles.py --artifact-prefix guideline_t4"
+    },
+    "guideline_t4_article_corpus.jsonl.gz": {
+      "required": true,
+      "schema": null,
+      "role": "T4 1단계에서 정본대조된 문서의 현행 전문과 전 조문 계층",
+      "generator": "scripts/collect_guideline_articles.py --artifact-prefix guideline_t4"
+    },
+    "_guideline_t4_crawl_report.json": {
+      "required": true,
+      "schema": null,
+      "role": "T4 1단계 크롤링 상태·차단회로·캐시 정책·미대조 목록",
+      "generator": "scripts/collect_guideline_articles.py --artifact-prefix guideline_t4"
+    },
+    "statute_citations.json": {
+      "required": true,
+      "schema": "statute_citations.schema.json",
+      "role": "시행지침 정의문 → 상위법령 인용 간선. 간선마다 지구와 근거 발췌를 담는다",
+      "generator": "scripts/build_citations.py",
+      "topKeys": [
+        "meta",
+        "statutes_needed",
+        "citations"
+      ]
+    },
+    "statute_master.json": {
+      "required": true,
+      "schema": "statute_master.schema.json",
+      "role": "법령 정본 노드. 정식명칭·법령ID·시행일·소관은 법제처 OPEN API 응답만 담는다",
+      "generator": "scripts/collect_statutes.py",
+      "topKeys": [
+        "meta",
+        "statutes"
+      ],
+      "constraint": "실측 표기는 실측표기 필드에 격리한다. 미대조 항목은 정식명칭·법령ID를 비운다"
+    },
+    "norm_basis.json": {
+      "required": true,
+      "schema": null,
+      "role": "규범값(건폐율·용적률·높이) 근거 계통. 조문과 준용·위임·완화 관계",
+      "generator": "scripts/build_norm_basis.py",
+      "topKeys": [
+        "meta",
+        "articles",
+        "relations"
+      ],
+      "constraint": "사례 문서에서 뽑지 않는다. 실측상 국토계획법 제77·78조는 189개 문서에서 인용 0건이다"
+    },
+    "article_master.json": {
+      "required": true,
+      "schema": null,
+      "role": "규범값 계통 조문의 본문 정본. 법제처 lawService.do 응답 원문",
+      "generator": "scripts/collect_articles.py",
+      "topKeys": [
+        "meta",
+        "articles"
+      ],
+      "constraint": "조문본문은 API 응답 원문이다. norm_basis 의 요지(사람이 요약한 파생값)와 같은 필드에 섞지 않는다"
+    },
+    "statute_history.json": {
+      "required": true,
+      "schema": null,
+      "role": "정본대조 법령의 시행 이력. 법제처 target=eflaw 응답인 사실만 담는다",
+      "generator": "scripts/collect_history.py",
+      "topKeys": [
+        "meta",
+        "statutes"
+      ],
+      "constraint": "법령·대통령령·부령만 eflaw 로 수집한다. 자치법규·행정규칙은 결측이 아니라 대상밖으로 명시한다"
+    },
+    "_freshness_observations.json": {
+      "required": true,
+      "schema": null,
+      "role": "지구번호 연도를 proxy 로 삼은 법령 신선도 관측. 적용 판본 판정이 아니다",
+      "generator": "scripts/collect_history.py",
+      "topKeys": [
+        "meta",
+        "observations"
+      ],
+      "constraint": "모든 행에 temporal_basis=지구번호연도_proxy 와 적용판본_미확정=true 를 둔다. 관측값을 ArticleVersion·LawApplication 의 asOf 로 쓰지 않는다"
+    },
+    "_statute_report.json": {
+      "required": true,
+      "schema": null,
+      "role": "미해소 인용과 어휘 미포착 문자열",
+      "topKeys": [
+        "meta",
+        "unresolved",
+        "vocab_missed"
+      ]
+    },
+    "_collect_report.json": {
+      "required": true,
+      "schema": null,
+      "role": "정본 대조 실패 목록과 후보",
+      "topKeys": [
+        "meta",
+        "unmatched"
+      ]
+    }
+  },
+  "crossFileConstraints": [
+    "guideline_article_scope.summary.document_count 는 Markdown 입력 전건 189와 같아야 한다",
+    "guideline_article_scope의 모든 mention은 district·source_file·article_title·line·evidence를 가져야 한다",
+    "h4 조문이 없는 문서는 범위에서 버리지 않고 documents[].scope_origin=fallback_unsegmented_document로 표시한다",
+    "첫 h4 조문 전 미귀속 본문은 조문으로 발명하지 않고 unassigned_document_preamble로 격리하여 범위에 포함한다",
+    "guideline_article_scope의 source_name_hint와 source_category는 관측 후보일 뿐이다. statute_master 정본대조 전에는 법령 노드의 정식명칭·법령ID로 쓰지 않는다",
+    "서울개봉 11530PV2016001 옥외광고물 조문에서 법률·구 조례·2008 가이드라인·특정구역 고시가 모두 T2_명칭만_전문후보로 관측되어야 한다",
+    "guideline_source_article_corpus는 scanned_scope_unit_count 전건을 담고 각 본문·줄범위·해시가 원 Markdown과 같아야 한다",
+    "guideline_article_scope_review는 전체본문 독립 직접인용의 누락 0과 구조오류 0을 만족해야 한다",
+    "계획·비법령·종류 불명확 규칙·시행지침 내부참조·서술 잔여물은 공식 API 큐와 분리한다",
+    "guideline_statute_master에서 정본대조된 모든 source는 guideline_article_corpus의 정본 문서에 연결되어야 한다",
+    "행정규칙 상세조회 식별자는 행정규칙일련번호를 ID로 사용하고 법령·자치법규는 MST를 사용한다",
+    "직접범위 및 T4 전문은 현재 정본이며 application_version_unresolved=true다. 시행지침 적용 판본으로 승격하지 않는다",
+    "T4는 직접범위 정본의 명시 cross-reference만 한 단계 확장하고 재귀 확장하지 않는다",
+    "403·429·비정상 차단 페이지와 연속 네트워크 오류에서는 회로를 열고 우회하지 않는다",
+    "citations[].term_id 는 terms.json 의 부분집합이어야 한다",
+    "citations[].statute_key 는 statute_master.json 의 statute_key 에 존재해야 한다 — kb-plan graph.json 의 'dangling 없음' 불변식을 산출 단계에서 미리 만족시킨다",
+    "모든 citation 은 districts 가 비어 있지 않아야 한다 — kb-plan graph.json 의 '모든 관계에 출처가 있다' 불변식",
+    "citations[].quote 에는 statute_key 가 가리키는 법령의 표기(surface)가 실재해야 한다 — 추측 간선 금지. quote 는 인용 위치 기준 발췌여야 하며, 문장 앞부분을 잘라 담으면 뒤쪽 인용이 근거 밖으로 밀려난다",
+    "statute_master[].인용수 합은 citations 길이와 같아야 한다",
+    "검증상태가 정본대조이면 정식명칭·법령ID·시행일자·출처URL 이 모두 있어야 한다",
+    "검증상태가 미대조이면 정식명칭·법령ID 가 비어 있어야 한다 — 못 찾은 것을 찾은 것처럼 만들지 않는다",
+    "정식명칭은 API 응답만 담는다. 사례 문서의 표기는 실측표기 필드에 격리한다. 둘을 같은 필드에 섞으면 추정 명칭이 확정 명칭처럼 쓰인다",
+    "시행일자는 수집일 기준 현행 법령의 것이며 시행지침이 인용한 시점의 법령과 다를 수 있다. 시점 비교 없이 조문 내용을 지구에 귀속시키지 않는다",
+    "표기교정은 근거를 확인한 것만 case/정본대조.json 에 넣는다. 교정해도 정확일치가 나지 않으면 미대조로 남으므로 교정이 결과를 만들어내지 않는다",
+    "norm_basis.relations 의 from/to 는 articles[].article_id 이거나 '조례' 리터럴이어야 한다",
+    "norm_basis.articles[].article_id 는 모두 article_master.json 에 존재해야 하고 수집상태가 '수집' 이어야 한다 — 요지만 있고 본문이 없는 조문을 남기지 않는다",
+    "article_master[].조문본문 은 조문내용·항내용·호내용·목내용을 XML 등장 순서대로 붙인 값이다. 항이 있는 조문은 조문내용에 제목만 오므로 조문내용만 읽으면 본문이 빈다",
+    "statute_history 는 statute_master 에서 정본대조된 법령 전건을 담고 법령명·법령ID·법령구분을 그대로 유지한다",
+    "부분수집·대상밖·결과없음·API오류 이력은 freshness proxy 계산에 쓰지 않고 관측값을 null 로 둔다",
+    "_freshness_observations 는 정본대조 법령 × 인용 지구의 전건을 담되 지구번호 연도를 시행지침 작성일·고시일·인용일로 승격하지 않는다"
+  ],
+  "verifyRoutine": [
+    "스키마·교차제약 — scripts/verify_statute.py",
+    "--full 은 인용 표기가 근거 문장에 실재하는지까지 대조한다",
+    "미대조 목록(_collect_report.json)을 보고 어휘 결함과 실제 미수록 법령을 가른다. 서술 잔여물이 미대조로 나오면 build_citations.py 의 어휘 학습 문제다",
+    "규범값 계통 조문은 본문이 수집되어야 한다. 요지와 본문이 어긋나면 요지를 고친다",
+    "법령 이력과 신선도 관측은 scripts/verify_statute.py 가 statute_master·statute_citations 와 전건 대조한다",
+    "일반 조문 직접범위와 T4 크롤링 산출물은 scripts/verify_guideline_articles.py 로 전건 대조한다",
+    "Git 제외 원응답 캐시의 실재 검사는 수집 작업공간에서만 scripts/verify_guideline_articles.py --require-cache 로 수행한다"
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "설명": "output/ppt/<deck-id>/02_deck.json 산출물 계약. 구조는 deck.schema.json, 문체 규칙과 교차 제약은 이 파일에 둔다. 문체 규칙의 서술 정본은 SKILL.md 이며 이 파일은 그 기계 검사 조건이다.",
+
+  "산출물": [
+    {
+      "path": "output/ppt/<deck-id>/02_deck.json",
+      "생성": "ppt-writer",
+      "내용": "덱 제목과 슬라이드별 역할·제목·본문·시각자산·발표자 노트",
+      "schema": "deck.schema.json"
+    }
+  ],
+
+  "선행조건": [
+    "01_source.json 이 존재하고 source.schema.json 을 통과한다",
+    "01_source.json 의 facts[] 가 비어 있지 않다",
+    "쓰려는 수치의 fact 에 as_of 와 measured_by 가 있다"
+  ],
+
+  "멱등성": "같은 01_source.json 에 대해 다시 쓰면 slides[].no 와 role 배열이 같아야 한다. 본문 문구는 저작이므로 바이트 동일을 요구하지 않는다. source_sha256 은 상류가 그대로면 같아야 한다.",
+
+  "값도메인": {
+    "role": {
+      "cover": "표지. 덱 제목과 대상·기준시점",
+      "task": "작업 덱. 제목은 'Task N — 대상' 형태",
+      "bridge": "연결. 앞 Task 의 한계가 다음 Task 를 만든 지점",
+      "appendix": "부록. 고밀도 근거표",
+      "closing": "마무리. 미해결 항목과 다음 작업"
+    },
+    "profile": {
+      "docs-ppt-20260813": "docs/ppt/design-tokens.json 의 색·타이포·간격·캔버스 적용",
+      "none": "렌더러 기본 프로필"
+    },
+    "stage": {
+      "1": "수집",
+      "2": "내용 보존",
+      "3": "적용 범위",
+      "4": "근거 연결",
+      "5": "누락 검증",
+      "6": "전국 확대"
+    },
+    "work_boundaries": [
+      "작업 1 — 수집 단계(자료 수집 및 정제)",
+      "작업 2 — 법 적용 확인",
+      "작업 3 — 스키마 설계 및 구현"
+    ],
+    "body.kind": {
+      "범위": "표지·연결·마무리에서 적용 범위를 고정하는 불릿",
+      "결과": "level 1에서 기준 기간의 확인 결과를 요약하는 상위 불릿",
+      "결론": "level 1에서 결과의 판단 의미를 요약하는 상위 불릿",
+      "남은 한계": "level 1에서 닫히지 않은 검증 범위를 요약하는 상위 불릿"
+    },
+    "body.level": {
+      "1": "결과·결론·남은 한계의 판단 요약",
+      "2": "관측 단위·확정 수치·판정 근거·후속 대상의 하위 근거"
+    }
+  },
+
+  "교차제약": [
+    "title 과 slides[].title 에 서술어 종결·의문형·명사화된 완결절이 없어야 한다",
+    "slides[].body[].text 는 명사형 종결(함·됨·임·음) 또는 명사구 종결을 기본으로 한다. 서술형 종결(했다·한다·이다·있다) 비율이 항목의 20%를 넘으면 경고다",
+    "숫자를 포함한 body[].text 에는 fact_refs 가 있어야 한다",
+    "본문과 시각 캡션의 숫자 토큰마다 claims[] 의 display_value·fact_ref 결박이 있어야 한다",
+    "claims[].display_value 는 참조한 fact.value 와 같아야 한다",
+    "fact_refs 의 각 id 는 01_source.json 의 facts[].id 에 실재해야 한다",
+    "비율 fact 가 denominator_fact 를 쓰면 분모 fact 를 함께 참조한다. denominator 수치를 직접 가지면 해당 비율 fact 하나를 참조할 수 있다",
+    "slides[].no 는 1부터 빈틈없이 증가한다",
+    "slides[].stage 가 있으면 1부터 6까지의 정수이며 기준 덱의 고정 단계 순서를 가리킨다",
+    "work_boundaries 는 작업 1 수집 단계(자료 수집 및 정제) → 작업 2 법 적용 확인 → 작업 3 스키마 설계 및 구현의 고정 순서다",
+    "role 이 task 인 슬라이드는 work_boundary 를 반드시 가진다",
+    "role 이 task 인 슬라이드의 level 1 body[] 는 결과·결론·남은 한계 kind 를 각각 하나 이상 포함한다",
+    "role 이 task 인 슬라이드의 level 2 body[] 는 kind 를 갖지 않는다",
+    "task의 각 level 1 불릿 직후에는 level 2 하위 근거를 하나 이상 둔다",
+    "작업 활동과 파일 목록은 task 본문이 아니라 notes 의 [Sources] 블록에 둔다",
+    "role 이 cover 인 슬라이드는 정확히 하나이며 no 는 1이다",
+    "visuals[] 는 슬라이드당 최대 1개다",
+    "visuals[].path 는 실재하는 기존 산출물이어야 한다. 새 그림을 이 단계에서 만들지 않는다",
+    "01_source.json 의 limitations[] 가 비어 있지 않으면 role 이 closing 인 슬라이드가 있어야 한다"
+  ],
+
+  "검증": "ppt-verify/scripts/verify_deck.py 가 구조·문체·fact 해소·상류 해시를 함께 본다. 문체 판정의 경계 사례는 ppt-deck/references/문체-판정.md 가 정본이다."
+}

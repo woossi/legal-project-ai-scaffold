@@ -1,0 +1,219 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "legal-table/contract/table_loss.schema.json",
+  "title": "_table_loss.json — 표 소실 계량 · 재변환 견적서",
+  "type": "object",
+  "required": ["meta", "records"],
+  "additionalProperties": false,
+  "properties": {
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "생성기", "입력", "문서수", "coverage_note", "줄번호규약",
+        "loss_class_domain", "loss_class_분포",
+        "recovery_grade_domain", "recovery_grade_분포", "loss_mix_keys",
+        "reconvert_candidate수", "값보유문서수", "본문_파이프표_보유문서수",
+        "선언표_합계", "소실표_합계", "확정값수_상태", "견적_사용법",
+        "판정_규약", "관측_한계"
+      ],
+      "properties": {
+        "생성기": {"const": "legal-table/scripts/scan_table_loss.py"},
+        "입력": {"const": "output/legal/markdown/{서울,인천,경기}/*.md"},
+        "줄번호규약": {
+          "type": "string",
+          "pattern": "물리 줄번호\\(1-based\\)"
+        },
+        "문서수": {"const": 189},
+        "값보유문서수": {"const": 93},
+        "본문_파이프표_보유문서수": {
+          "const": 0,
+          "description": "189건 전건에서 정상 마크다운 표는 0개다. 설계가 말한 '파이프 표 보유 4문서' 는 OCR 이 표 괘선을 문자로 뱉은 줄이며 표가 아니다"
+        },
+        "coverage_note": {
+          "type": "string",
+          "pattern": "한 분모로 섞지 않는다",
+          "description": "이 산출물의 커버리지 93 과 조례 대조 커버리지 45 를 섞지 못하게 하는 경고. 섞으면 검증 커버리지가 두 배 넘게 부풀려진다"
+        },
+        "loss_class_domain": {
+          "type": "array",
+          "items": {"enum": ["표자체없음", "값깨짐", "OCR훼손", "소실없음", "표없음"]},
+          "minItems": 5, "maxItems": 5,
+          "description": "표없음 은 R1 검수에서 추가했다 — 소실없음 이 '값 회수 성공' 과 '잴 표가 애초에 없음' 을 같은 칸에 넣고 있었다"
+        },
+        "recovery_grade_domain": {
+          "type": "array",
+          "items": {"enum": ["전량소실", "부분소실", "회수불가", "관측불가"]},
+          "minItems": 4, "maxItems": 4
+        },
+        "loss_mix_keys": {
+          "type": "array",
+          "items": {"enum": ["표자체없음_표건수", "값깨짐_값줄수",
+                             "소실없음_값줄수", "OCR훼손_훼손줄수"]},
+          "minItems": 4, "maxItems": 4,
+          "description": "갈래마다 모수가 다르므로 단위를 키 이름에 박는다. 이름이 같으면 나란히 비교하게 되는데, 비교하면 안 되는 값들이다"
+        },
+        "loss_class_분포": {
+          "type": "object",
+          "propertyNames": {"enum": ["표자체없음", "값깨짐", "OCR훼손", "소실없음", "표없음"]},
+          "additionalProperties": {"type": "integer", "minimum": 0}
+        },
+        "recovery_grade_분포": {
+          "type": "object",
+          "propertyNames": {"enum": ["전량소실", "부분소실", "회수불가", "관측불가"]},
+          "additionalProperties": {"type": "integer", "minimum": 0}
+        },
+        "reconvert_candidate수": {"type": "integer", "minimum": 0, "maximum": 189},
+        "선언표_합계": {"type": "integer", "minimum": 0},
+        "확정값수_상태": {
+          "type": "string",
+          "pattern": "0 이 아니다",
+          "description": "null 은 미산출이지 0 이 아니다. 값 0 인 지구(표 소실로 회수된 규범값 없음)와 구분해 읽는다"
+        },
+        "확정값_합계": {"type": ["integer", "null"], "minimum": 0},
+        "확정값_보유문서수": {"type": ["integer", "null"], "minimum": 0},
+        "소실표_합계": {"type": "integer", "minimum": 0},
+        "견적_사용법": {"type": "string", "minLength": 1},
+        "판정_규약": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+        "관측_한계": {"type": "array", "items": {"type": "string"}, "minItems": 1}
+      }
+    },
+    "records": {
+      "type": "array",
+      "minItems": 189,
+      "maxItems": 189,
+      "items": {"$ref": "#/$defs/record"}
+    }
+  },
+  "$defs": {
+    "record": {
+      "type": "object",
+      "required": [
+        "dstrcAppnNo", "lc5", "지역", "district", "source_file",
+        "extraction_methods", "frontmatter_표", "본문_파이프표",
+        "본문_OCR파이프줄", "표참조수", "표참조_본문실재수", "값줄수",
+        "다중값줄수", "단일값줄수", "loss_class", "loss_mix",
+        "recovery_grade", "loss_basis", "소실표건수", "확정값수",
+        "reconvert_candidate", "reconvert_basis",
+        "article_integrity_class", "article_integrity_basis", "표참조"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "dstrcAppnNo": {"type": "string", "pattern": "^[0-9]{5}[A-Z]{2}[0-9]{7}$"},
+        "lc5": {"type": "string", "pattern": "^[0-9]{5}$"},
+        "지역": {"enum": ["서울", "인천", "경기"]},
+        "district": {"type": "string", "minLength": 1},
+        "source_file": {"type": "string", "pattern": "^output/legal/markdown/"},
+        "extraction_methods": {
+          "type": "array",
+          "items": {
+            "enum": ["hwp5txt", "hwp5html(표포함)", "PDF",
+                     "OCR(tesseract kor)", "hwp5proc(레코드)"]
+          },
+          "description": "값 도메인은 189건 실측 관측값으로 고정한다. 새 값이 나오면 변환 파이프라인이 바뀐 것이므로 계약을 먼저 갱신한다"
+        },
+        "frontmatter_표": {
+          "type": "integer", "minimum": 0,
+          "description": "원본에서 센 표 수. 소실 표 수의 하한이다 — 표=0 으로 선언된 문서에도 셀이 줄로 풀린 표 흔적이 실재한다"
+        },
+        "본문_파이프표": {"const": 0},
+        "본문_OCR파이프줄": {"type": "integer", "minimum": 0},
+        "표참조수": {"type": "integer", "minimum": 0},
+        "표참조_본문실재수": {"type": "integer", "minimum": 0},
+        "값줄수": {"type": "integer", "minimum": 0},
+        "다중값줄수": {"type": "integer", "minimum": 0},
+        "단일값줄수": {"type": "integer", "minimum": 0},
+        "loss_class": {
+          "enum": ["표자체없음", "값깨짐", "OCR훼손", "소실없음", "표없음"],
+          "description": "값 회수 상태로 정한 처방 라벨. 건수 비교가 아니다"
+        },
+        "loss_mix": {
+          "type": "object",
+          "propertyNames": {
+            "enum": ["표자체없음_표건수", "값깨짐_값줄수",
+                     "소실없음_값줄수", "OCR훼손_훼손줄수"]
+          },
+          "additionalProperties": {"type": "integer", "minimum": 1},
+          "description": "갈래별 건수. 키마다 모수가 달라 단위를 이름에 박았다. loss_class 는 지배값 하나이고 여기에 나머지가 남는다 — 판정을 접어서 정보를 버리지 않는다"
+        },
+        "recovery_grade": {
+          "enum": ["전량소실", "부분소실", "회수불가", "관측불가"],
+          "description": "재변환 우선순위 축. loss_class 와 축이 다르므로 한 문서가 소실없음이면서 부분소실일 수 있다"
+        },
+        "loss_basis": {"type": "string", "minLength": 1},
+        "소실표건수": {
+          "type": "integer", "minimum": 0,
+          "description": "본문이 남지 않은 표 수. loss_mix.표자체없음_표건수 와 같은 값을 최상위로 올린 것 — 견적 집계에 쓴다"
+        },
+        "확정값수": {
+          "type": ["integer", "null"],
+          "minimum": 0,
+          "description": "norm_values.json 의 context_class=규범 을 지구별로 센 값. null 은 값 추출 미산출이며 **0 이 아니다** — 0 은 표 소실로 회수된 규범값이 없다는 관측이다"
+        },
+        "reconvert_candidate": {
+          "type": "boolean",
+          "description": "loss_class 에서 파생하지 않는다. 조건은 '회수할 표가 남아 있는가' 이며 OCR 문서는 제외한다"
+        },
+        "reconvert_basis": {"type": "string", "minLength": 1},
+        "article_integrity_class": {
+          "oneOf": [
+            {"type": "null"},
+            {"enum": ["완전", "본문누락", "구조누락", "순서훼손", "조문없음",
+                      "미검증"]}
+          ],
+          "description": "codex 조문 무결성 판정의 지배값. 산출물을 실제로 읽은 경우에만 채운다. 못 읽으면 null 이고 basis 에 사유를 남긴다 — 추정해 채우지 않는다. 건수 max 가 아니라 결함 우선순위로 정한다(구조누락>본문누락>순서훼손>완전). `조문없음` 은 원본·md 양쪽 조문 0개이며 `완전` 과 구분한다. `미검증` 은 결함 없음이 아니다"
+        },
+        "article_integrity_basis": {"type": "string", "minLength": 1},
+        "표참조": {"type": "array", "items": {"$ref": "#/$defs/tableref"}}
+      }
+    },
+    "tableref": {
+      "type": "object",
+      "required": ["surface", "line", "kind", "is_caption", "article",
+                   "section", "section_line", "본문실재", "인용문"],
+      "additionalProperties": false,
+      "properties": {
+        "surface": {"type": "string", "minLength": 1},
+        "line": {
+          "type": "integer", "minimum": 1,
+          "description": "md 파일 물리 줄번호(1-based). frontmatter 를 잘라낸 body 오프셋이 아니다"
+        },
+        "kind": {"enum": ["표", "별표"]},
+        "is_caption": {"type": "boolean"},
+        "article": {
+          "oneOf": [
+            {"type": "null"},
+            {
+              "type": "object",
+              "required": ["no", "label", "line", "origin"],
+              "additionalProperties": false,
+              "properties": {
+                "no": {"type": "string"},
+                "label": {"type": "string"},
+                "line": {"type": "integer", "minimum": 1},
+                "origin": {"const": "조문헤딩"}
+              }
+            }
+          ]
+        },
+        "article_reason": {
+          "type": "string", "minLength": 1,
+          "description": "article 이 null 일 때 필수. 없는 조문을 가장 가까운 h4 로 채우지 않았음을 보인다"
+        },
+        "section": {"type": ["string", "null"]},
+        "section_line": {"type": ["integer", "null"], "minimum": 1},
+        "본문실재": {
+          "type": "boolean",
+          "description": "표 참조 직후 8줄 안의 값 줄·괘선 잔해로 근사한 관측값. 확정값이 아니다"
+        },
+        "인용문": {"type": "string"}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"article": {"type": "null"}}},
+          "then": {"required": ["article_reason"]}
+        }
+      ]
+    }
+  }
+}

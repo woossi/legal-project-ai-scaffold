@@ -1,0 +1,42 @@
+{
+  "$comment": "BLS5_DSTRC_MASTER 원본 스냅샷의 수집 경계와 명령 계약이다. 시행지침·도면 첨부 원장은 commands.json이 소유한다.",
+  "source": {
+    "table": "BLS5_DSTRC_MASTER",
+    "meaning": "지구단계정보. 지구지정번호·지구명·단계·고시정보를 제공한다.",
+    "doesNotContain": ["지구단위계획시행지침", "도면 첨부", "fileRegistNo"],
+    "page": "https://openapi.jigu.go.kr/down/detail.do?table=BLS5_DSTRC_MASTER",
+    "selection": "api/list.json 응답에서 table=BLS5_DSTRC_MASTER, fileTy=csv, ctprvn=00인 행 중 stdrDe와 fileNo가 가장 큰 파일"
+  },
+  "commands": {
+    "discover": {
+      "argv": ["discover"],
+      "writes": [],
+      "result": "최신 전국 CSV의 공식 파일 메타를 표준 출력에 JSON으로 쓴다"
+    },
+    "fetch": {
+      "argv": ["fetch", "--source-zip", "<path>"],
+      "alternativeArgv": ["fetch", "--usage-profile", "<json-path>"],
+      "sourceChoice": "공식 화면에서 직접 받은 ZIP 또는 공식 다운로드 폼의 이용정보 JSON 중 하나만 지정한다",
+      "manualBinding": "수동 ZIP 내부 CSV 파일명은 discover 자산의 stdrDe 8자리 기준일을 포함해야 한다. 기준일이 다르면 저장하지 않는다",
+      "usagePrivacy": "이용정보는 공식 폼의 허용 키만 요청에 사용한다. 알 수 없는 키는 전송하지 않고 manifest·로그·source URL에는 기관명·부서명·이용정보를 저장하지 않는다",
+      "writes": [
+        "output/legal/source/jigu/bls5_dstrc_master/<stdrDe>/manifest.json",
+        "output/legal/source/jigu/bls5_dstrc_master/<stdrDe>/<공식 ZIP>",
+        "output/legal/source/jigu/bls5_dstrc_master/<stdrDe>/<ZIP 내부 CSV>"
+      ],
+      "schema": "master.schema.json",
+      "idempotency": "같은 stdrDe와 같은 ZIP·CSV sha256이면 기존 스냅샷을 검증하고 재기록하지 않는다. 바이트가 다르면 --force 없이는 중단한다",
+      "crossChecks": ["stdrDe는 8자리 날짜", "ZIP 내부 CSV 파일명은 stdrDe를 포함", "asset.totcnt와 csv.rowCount 일치"]
+    },
+    "verify": {
+      "argv": ["verify", "--snapshot", "<path>"],
+      "checks": ["manifest 식별자", "ZIP·CSV 파일 존재", "bytes", "sha256", "CSV 필수 컬럼", "ZIP 내부 CSV 기준일과 asset.stdrDe 일치", "asset.totcnt와 csv.rowCount 일치", "고유 지구 수", "인코딩"]
+    }
+  },
+  "separation": {
+    "masterSnapshot": "지구 마스터 원본과 출처 메타만 보존한다",
+    "attachmentIndex": "collect.py index가 map.jigu.go.kr 지구 상세에서 첨부 목록을 만든다",
+    "attachmentFiles": "collect.py fetch가 시행지침·도면 원본을 받는다",
+    "prohibition": "BLS5 전건을 output/legal/시행지침/meta.json에 미다운로드 지구로 합치지 않는다"
+  }
+}

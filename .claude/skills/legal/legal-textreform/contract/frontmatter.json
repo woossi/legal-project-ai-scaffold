@@ -1,0 +1,74 @@
+{
+  "$comment": "output/legal/markdown/<지역>/<지구명>.md 의 frontmatter 계약. merge_md.py 산출. 어휘는 실측 관측값(189건)이며 새 값이 나오면 계약을 먼저 갱신한다. from 의 meta.json 은 전 지구 통합 파일 output/legal/시행지침/meta.json 이고, 지구는 그 districts[] 에서 dstrcAppnNo 로 찾는다.",
+  "outBase": "output/legal/markdown",
+  "fileNamePattern": "^(?P<지구명>.+)\\.md$",
+  "fieldOrder": [
+    "지구명", "지구번호", "지역", "사업단계", "면적", "시행자",
+    "사업기간", "근거법령", "구성문서수", "조문수", "표", "원본구성", "병합일시"
+  ],
+  "fields": {
+    "지구명": { "required": true, "type": "string", "from": "meta.json:districts[].dstrcNm", "mustMatchFileName": true },
+    "지구번호": { "required": true, "type": "string", "from": "meta.json:districts[].dstrcAppnNo" },
+    "지역": { "required": true, "type": "enum", "values": ["서울", "인천", "경기"], "from": "meta.json:districts[].region" },
+    "사업단계": { "required": true, "type": "string", "from": "meta.json:districts[].stepNm" },
+    "면적": { "required": true, "type": "string", "from": "meta.json:districts[].ar" },
+    "시행자": { "required": true, "type": "string", "from": "meta.json:districts[].opertnProfsNm" },
+    "사업기간": { "required": true, "type": "string", "from": "meta.json:districts[].bsnsOpertnPd" },
+    "근거법령": { "required": true, "type": "string", "from": "meta.json:districts[].lawordNm" },
+    "구성문서수": {
+      "required": true, "type": "int", "min": 1,
+      "note": "1이면 래퍼 없음. 2 이상이면 문서마다 `<!-- 원본: <경로> -->` + `# <구분>` 을 두고 `---` 로 구분"
+    },
+    "조문수": {
+      "required": true, "type": "int", "min": 0,
+      "definition": "본문의 `^#{1,6}\\s*제\\s*N\\s*조` 헤딩 수. `제 1 조` 처럼 숫자 앞뒤 공백이 들어간 조판이 흔하므로 공백을 허용해 세야 한다"
+    },
+    "표": {
+      "required": true, "type": "int", "min": 0,
+      "definition": "절삭 전 표 수 — `> [표]` 마커 수(A류) + slim_md.py 가 검출한 표 블록 수(B류). slim_md.py 가 절삭 시 이 값으로 갱신한다. 절삭은 수렴할 때까지 반복하지만 이 값은 1회차 검출 기준으로 고정한다. 절삭된 md 를 다시 돌려도 값을 0 으로 덮지 않는다"
+    },
+    "원본구성": { "required": true, "type": "list", "item": "originItem" },
+    "병합일시": { "required": true, "type": "datetime" },
+    "추출품질": {
+      "required": false, "type": "enum", "values": ["OCR"],
+      "note": "OCR 산출물에만 최상위에 추가. 후속 분석이 구별할 수 있어야 한다"
+    },
+    "OCR경고": { "required": false, "type": "list", "note": "추출품질이 OCR 일 때 동반" }
+  },
+  "originItem": {
+    "파일": {
+      "required": true, "type": "string",
+      "note": "수집 당시 서버가 준 원본명이다. 디스크의 실제 파일명(districts[].downloaded[].savedAs)과 다르며, 대조는 같은 항목의 originalName 으로 한다. 이 스킬이 읽는 시행지침 원문은 fileRegistNo=7 이고 그 savedAs 는 `지구단위계획 시행지침.<확장자>` 다. ZIP 내부 출처는 `<zip이름>__<내부경로>` 규약으로 보존",
+      "$파일선택": "지구 디렉터리에는 시행지침(fileRegistNo=7)과 도면 첨부(2·4·5)가 함께 있고 확장자만으로는 구분되지 않는다 — 코드 5 에 .zip 13건·.pdf 2건이 실재한다. convert.py 는 디렉터리 일괄에서 어간이 `지구단위계획 시행지침` 인 파일만 고르고 나머지는 건수와 예시를 stderr 로 알린다. 어간표 정본은 legal-dup/contract/commands.json 의 assetStems 이며, 파일을 직접 지목하면 거르지 않는다(--any-stem 은 종전 동작)",
+      "$남은구멍": "unique_name 이 붙이는 중복 접미(`지구단위계획 시행지침-2.hwp`)는 어간이 달라 일괄에서 빠진다. 현재 실코퍼스에 그런 파일은 없고, 빠지면 stderr 의 SKIP 목록에 나타나므로 침묵하지는 않는다"
+    },
+    "구분": {
+      "required": true, "type": "enum",
+      "values": ["본문", "총론", "용지별 시행지침", "특별계획구역", "경관 및 공공부문",
+                 "환경부문", "에너지부문", "결정조서", "표지", "목차", "민간부문"],
+      "note": "관측 11종"
+    },
+    "추출": {
+      "required": true, "type": "enum",
+      "values": ["PDF", "hwp5txt", "hwp5html(표포함)", "hwp5proc(레코드)", "OCR(tesseract kor)",
+                 "hwpml", "HWPX(section XML)"],
+      "$근거": "앞의 다섯은 관측 189건의 실측값이다. 뒤의 둘은 실측이 아니라 convert.routes() 가 낼 수 있는 값이므로 등록한다 — 코드가 낼 수 있는데 계약에 없으면 그 경로로 만든 md 는 생성 즉시 계약 위반이 된다. hwpml 은 평문 XML(<?xm 매직)에 대해 이미 존재하던 경로인데 값 도메인에서 빠져 있었고 관측 0건이라 드러나지 않았다. HWPX(section XML) 는 이번에 추가한 경로다.",
+      "$이름사슬": "routes() 의 경로 이름이 그대로 이 값이 되는 것은 HWP 계열에서만 확인된다 — hwp5txt·hwp5html(표포함)·hwp5proc(레코드) 세 값이 routes() 이름과 정확히 일치한다. PDF 는 반례로, routes() 가 내는 이름은 'pdftotext -layout'·'pdftotext (raw)' 인데 기록값은 PDF 다(merge_md.py 가 fm.get('추출방식', tag) 로 대체한다). 중간 인덱스 output/md/_index.json 이 현재 없어 사슬 전체를 재확인할 수 없으므로, 새 경로 이름은 그대로 기록될 수 있다고 보고 등록한다. 이 불확실성 자체가 검사의 사각지대다.",
+      "HWPX$근거": "HWPX 는 ZIP 컨테이너 안의 HWPML 2011 XML 이라 매직바이트가 PK 다. hwp5 계열 도구가 열지 못하므로 hwp5txt·hwp5html 로 대체할 수 없고, 표준 라이브러리 zipfile + ElementTree 로 Contents/section*.xml 을 직접 읽는다. 값에 포맷명을 쓰는 것은 같은 도메인의 PDF 선례를 따른 것이다 — 이 축은 무엇으로 열었는가가 아니라 어떤 원본을 어떻게 폈는가를 가리킨다."
+    },
+    "글자": { "required": true, "type": "int", "min": 0 }
+  },
+  "bodyRules": {
+    "헤딩": "제N편 -> # / 제N장 -> ## / 제N절 -> ### / 제N조 -> ####",
+    "번호": "①~⑳ -> `- ①` / `1.` -> 2칸 들여 `1. ` / 가.·불릿 -> 2칸 들여 `- `",
+    "마커": "<표> -> `> [표]` / <그림> -> `> [그림]` / <그림N-N> 캡션 -> `**...**`",
+    "알려진부작용": "빌더가 줄 선두 정규식으로만 판단하므로 본문 상호참조가 헤딩으로 승격된다(`#### 제43조 및 동법 시행령 제27조의2에 의하여…`). 정상 변환 문서에도 있는 현상이라 조문 순서 검사에서 조판 뒤섞임과 혼동하면 안 된다"
+  },
+  "crossFileConstraints": [
+    "지구번호는 frontmatter 의 지구번호 필드에만 있다 — 파일명에는 없다. output/legal/시행지침/meta.json 의 districts[].dstrcAppnNo 와 일치해야 한다",
+    "지구명은 그 지구의 dstrcNm 과 trim 기준으로 일치한다 — 원본에 후행 공백이 섞인 지구가 있어(송도 첨단산업클러스터C) 파일명·frontmatter 는 trim 한 값을 쓴다",
+    "구성문서수 == 원본구성 의 길이",
+    "추출품질: OCR 이면 원본구성 에 추출: OCR(tesseract kor) 항목이 최소 1개 있어야 한다",
+    "조문수 는 본문에서 실제로 센 값과 정확히 일치해야 한다. 표 는 절삭 전 값이라 본문 실측을 하한으로만 쓴다 — 기록값 >= 실측이면 통과한다(slim_md.py 가 `> [표]` 마커를 지우므로 절삭 후 실측은 0 이 된다)"
+  ]
+}

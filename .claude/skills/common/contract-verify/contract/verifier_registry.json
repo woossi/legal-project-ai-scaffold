@@ -1,0 +1,497 @@
+{
+  "$comment": "계약 검증기 등록부. 스킬별 검증기의 실행 순서·선행조건·검사 대상을 선언한다. 이 파일은 계약을 만들지 않는다 — 각 산출물의 정본은 그 팀 스킬의 contract/ 이며, 여기에는 어느 검증기가 어디에 있고 무엇이 있어야 도는지만 담는다.",
+  "reportPath": "output/kb/reports/_contract_verify.json",
+  "exitCodePolicy": {
+    "0": "통과",
+    "2": "미검사 (검증 불가)",
+    "그 밖": "실패",
+    "$comment": "선행조건이 미충족이면 검증기를 실행하지 않고 미검사로 집계한다. 미검사는 실패가 아니다."
+  },
+  "ignoredVerifiers": [
+    {
+      "script": ".claude/skills/legal/legal-statute/scripts/verify_statute_codex_legacy.py",
+      "reason": "verify_statute.py 로 대체한 보존용 레거시 구현이다"
+    },
+    {
+      "script": ".claude/skills/legal/legal-textreform/scripts/verify_article_integrity.py",
+      "reason": "진단 리포트 생성기이며 발견 결과와 관계없이 종료코드 0을 반환하므로 공통 판정기로 사용할 수 없다"
+    },
+    {
+      "script": ".claude/skills/legal/legal-textreform/scripts/verify_article_integrity_codex_legacy.py",
+      "reason": "verify_article_integrity.py 로 대체한 보존용 레거시 구현이다"
+    }
+  ],
+  "verifiers": [
+    {
+      "id": "legal-dup/verify_contract",
+      "team": "legal",
+      "skill": "legal-dup",
+      "order": 1,
+      "kind": "계약 검증",
+      "script": ".claude/skills/legal/legal-dup/scripts/verify_contract.py",
+      "args": [],
+      "requires": {
+        "paths": [
+          "output/legal/시행지침/meta.json",
+          "output/legal/시행지침/*/_index.json",
+          "output/legal/시행지침/*/*/"
+        ],
+        "modules": []
+      },
+      "checks": "통합 meta.json 의 자기집계(districtCount·summary)와 dstrcAppnNo 고유성, 지역 _index.json 구조, 지구 디렉터리 ↔ meta.json 대응, downloaded ⊆ attachments, savedAs 파일 실재와 바이트 일치",
+      "exitCodes": "0=충족 · 1=위반. docstring 은 2=검증 불가로 적었으나 sys.exit(문자열) 이라 실제 종료코드는 1 이다",
+      "note": "지구 디렉터리와 원본 8.8GB 는 .gitignore 로 미추적이다. 원본이 없는 체크아웃에서는 지구 디렉터리 glob 이 비어 선행조건 미충족 — 미검사다. 강행하면 190건이 '디렉터리 없음' 으로 잡히나 이는 결손이 아니라 입력 부재다"
+    },
+    {
+      "id": "legal-textreform/verify",
+      "team": "legal",
+      "skill": "legal-textreform",
+      "order": 2,
+      "kind": "품질 검증",
+      "script": ".claude/skills/legal/legal-textreform/scripts/verify.py",
+      "args": [
+        "output/legal",
+        "--json"
+      ],
+      "requires": {
+        "paths": [
+          "output/legal/**/*.txt"
+        ],
+        "modules": []
+      },
+      "checks": "변환 품질 게이트 7종 — 실질 문자 비율·연속 공백·표/그림 마커 비율·2자 이하 줄 비율·평균 줄 길이·쪽당 글자수(PDF)·원본 KB당 글자수(HWP)",
+      "exitCodes": "0=전건 통과 · 1=하나라도 FAIL · 2=사용법 오류(argparse)",
+      "note": "유일한 품질 검증기다. 대상은 변환 중간 산출물 txt 이며 저장소에는 0건이다 — 항상 미검사다. 원본 디렉터리 대조(--src-dir)는 쪽당·KB당 지표를 켜므로 실제 변환 시에는 손으로 인자를 준다"
+    },
+    {
+      "id": "legal-textreform/verify_contract",
+      "team": "legal",
+      "skill": "legal-textreform",
+      "order": 3,
+      "kind": "계약 검증",
+      "script": ".claude/skills/legal/legal-textreform/scripts/verify_contract.py",
+      "args": [],
+      "requires": {
+        "paths": [
+          "output/legal/markdown/*/*.md"
+        ],
+        "modules": []
+      },
+      "checks": "병합 md frontmatter 의 필드 존재·순서·값 도메인, 파일명 ↔ 지구명 일치, meta.json 대조, 구성문서수 ↔ 원본구성 길이, 본문 실측 대조(표는 하한·조문수는 정확 일치)",
+      "exitCodes": "0=충족 · 1=위반. 산출물 없음도 sys.exit(문자열) 이라 1 이다",
+      "note": "meta.json 을 읽지 못하면 지구명·지역 대조를 건너뛰되 그 사실을 stdout 에 알린다. 조용한 무력화를 막는 구조라 미검사로 승격하지 않는다"
+    },
+    {
+      "id": "legal-toc/verify_contract",
+      "team": "legal",
+      "skill": "legal-toc",
+      "order": 4,
+      "kind": "계약 검증",
+      "script": ".claude/skills/legal/legal-toc/scripts/verify_contract.py",
+      "args": [],
+      "requires": {
+        "paths": [
+          "output/legal/analysis/시행지침_목차구조_전수조사.csv"
+        ],
+        "modules": []
+      },
+      "checks": "CSV 열 구성·순서, 값 도메인(enum·int·min), keyColumn 중복, 행 제약(최상위단위=없음 ↔ 최상위개수), md 와의 지구 집합 일치(유령 행·조사 누락)",
+      "exitCodes": "0=충족 · 1=위반. 산출물 없음·빈 CSV 도 sys.exit(문자열) 이라 1 이다",
+      "note": "argparse 가 없다 — 인자를 받지 않는 유일한 검증기다. 지구번호는 파일명이 아니라 md frontmatter 에서 읽으므로 파일명 규약이 바뀌어도 대조가 비지 않는다"
+    },
+    {
+      "id": "legal-term/verify_contract",
+      "team": "legal",
+      "skill": "legal-term",
+      "order": 5,
+      "kind": "계약 검증",
+      "script": ".claude/skills/legal/legal-term/scripts/verify_contract.py",
+      "args": [],
+      "requires": {
+        "paths": [
+          "output/legal/word/terms.json"
+        ],
+        "modules": [
+          "jsonschema"
+        ]
+      },
+      "checks": "outputs.json 의 required 파일 존재, terms.schema.json 구조 계약, meta 자기집계, occurrence_count·doc_frequency·district_ratio_adj 재계산, cited_laws ↔ legal_status 자기모순, core_terms·_ocr_only_terms 의 id 부분집합",
+      "exitCodes": "0=충족 · 1=위반 · 2=검증 불가(--full 의 git 참조 부재만 실제로 2 를 낸다)",
+      "note": "jsonschema 가 없으면 sys.exit('[2] jsonschema 미설치') 로 검증 자체를 중단한다 — 다른 검증기처럼 경고 후 계속하지 않는다. 그래서 모듈을 선행조건에 명시해 미검사로 가른다. --full 은 정의문 원문 대조라 느리고 절삭 이전 git 참조를 요구한다"
+    },
+    {
+      "id": "legal-term/verify_definitions",
+      "team": "legal",
+      "skill": "legal-term",
+      "order": 6,
+      "kind": "계약 검증",
+      "script": ".claude/skills/legal/legal-term/scripts/verify_definitions.py",
+      "args": [],
+      "requires": {
+        "paths": [
+          "output/legal/word/definiation.json"
+        ],
+        "modules": []
+      },
+      "checks": "definitions.schema.json 구조 계약, meta 자기집계(용어수·정의문수·표면변이수·반복도등급·변이등급분포), district_ratio_def·ubiquity 재판정, 갈래(variants_by_rule) 서명 중복·대표 일치, 정렬, terms.json id 부분집합",
+      "exitCodes": "0=통과 · 1=실패. 산출물 없음도 1 이다",
+      "note": "jsonschema 가 없으면 스키마만 건너뛰고 경고로 남긴 뒤 교차 제약은 계속 본다. 부분 미검사를 종료코드로 구분하지 않으므로 통과 보고에 경고가 섞일 수 있다"
+    },
+    {
+      "id": "legal-term/verify_doc_definitions",
+      "team": "legal",
+      "skill": "legal-term",
+      "order": 7,
+      "kind": "계약 검증",
+      "script": ".claude/skills/legal/legal-term/scripts/verify_doc_definitions.py",
+      "args": [],
+      "requires": {
+        "paths": [
+          "output/legal/word/doc_definitions.json"
+        ],
+        "modules": []
+      },
+      "checks": "doc_definitions.schema.json 구조 계약, meta 자기집계, definition ⊆ definition_source_text(재작성 금지), source_file 실재, 정렬, terms.json variant 대조, definiation.json 과의 정의조항_보유문서수 일치",
+      "exitCodes": "0=통과 · 1=실패. 산출물 없음도 1 이다",
+      "note": "verify_definitions.py 의 norm_md·norm_text 를 import 한다 — 두 검증기의 접기 폭이 같아야 한다는 계약이 코드 공유로 강제돼 있다"
+    },
+    {
+      "id": "legal-statute/verify_statute",
+      "team": "legal",
+      "skill": "legal-statute",
+      "order": 8,
+      "kind": "계약 검증",
+      "script": ".claude/skills/legal/legal-statute/scripts/verify_statute.py",
+      "args": [],
+      "requires": {
+        "paths": [
+          "output/legal/statute/statute_citations.json",
+          "output/legal/statute/statute_master.json",
+          "output/legal/statute/norm_basis.json",
+          "output/legal/statute/article_master.json",
+          "output/legal/statute/statute_history.json",
+          "output/legal/statute/_freshness_observations.json"
+        ],
+        "modules": []
+      },
+      "checks": "두 스키마 구조 계약, 인용 간선의 출처·근거 존재, dangling statute_key 없음, 검증상태별 필드 규율(정본대조는 채움·미대조는 비움), 규범값 계통 관계 도메인, 조문 본문 수집상태, 이력·신선도 관측의 전건 재계산 대조",
+      "exitCodes": "0=통과 · 1=실패. 산출물 없음도 1 이다",
+      "note": "--full 은 인용 표기(surface)가 근거 문장(quote)에 실재하는지 대조한다. 원자료 대조에 가장 가까운 검증기지만 대조 상대가 산출물 자신의 quote 필드다 — 원문 md 대조는 아니다"
+    },
+    {
+      "id": "legal-contrast/verify_contract",
+      "team": "legal",
+      "skill": "legal-contrast",
+      "order": 9,
+      "kind": "계약 검증",
+      "script": ".claude/skills/legal/legal-contrast/scripts/verify_contract.py",
+      "args": [],
+      "requires": {
+        "paths": [
+          "output/legal/contrast/facets.json",
+          "output/legal/contrast/pairs.json",
+          "output/legal/contrast/slots.json",
+          "output/legal/contrast/norms.json",
+          "output/legal/contrast/determinism.json",
+          "output/legal/contrast/variation.json",
+          "output/legal/contrast/_extraction_gap.json"
+        ],
+        "modules": []
+      },
+      "checks": "contrast.schema.json 의 required 직접 순회, 축 값 도메인, 대조쌍 불변식(대상축만 상이·통제축 동일), 슬롯 coverage 재계산, 규범 district_count 와 variants 지구 합집합, 보유율·보유구간 재판정, 귀속축 선두 확인, 법정필수호 갭",
+      "exitCodes": "0=통과 · 1=위반",
+      "note": "jsonschema 를 쓰지 않고 스키마의 required 를 직접 훑는다 — 배열은 첫 원소만 본다. argparse 도 쓰지 않고 '--full' in sys.argv 로 본다. --full 은 변이축·tier 재계산까지 수행한다"
+    },
+    {
+      "id": "legal-statute/verify_guideline_articles",
+      "team": "legal",
+      "skill": "legal-statute",
+      "order": 9.5,
+      "kind": "계약 검증",
+      "script": ".claude/skills/legal/legal-statute/scripts/verify_guideline_articles.py",
+      "args": [],
+      "requires": {
+        "paths": [
+          "output/legal/statute/guideline_article_scope.json",
+          "output/legal/statute/guideline_source_article_corpus.jsonl.gz",
+          "output/legal/statute/guideline_article_corpus.jsonl.gz",
+          "output/legal/statute/guideline_statute_master.json",
+          "output/legal/statute/guideline_t4_scope.json"
+        ],
+        "modules": []
+      },
+      "checks": "일반 조문 직접범위와 T4 파생범위 크롤링 산출물의 전건 계약 검증. 원 시행지침 조문 corpus 가 Markdown 의 실제 줄범위와 같은지 전건 대조하고, scope 요약의 자기집계와 corpus 건수를 맞춘다",
+      "exitCodes": "0=통과 · 1=실패. main() 의 반환값을 sys.exit 로 넘긴다",
+      "note": "`--require-t4-complete` 는 T4 파생범위가 전건 수집됐을 때만 통과시킨다. 부분 수집 상태에서는 붙이지 않는다. `legal-term` 계열·`legal-xref` 와 함께 원문 md 를 대조하는 검증기다"
+    },
+    {
+      "id": "legal-statute/verify_hang_numbering",
+      "team": "legal",
+      "skill": "legal-statute",
+      "order": 9.75,
+      "kind": "계약 검증",
+      "script": ".claude/skills/legal/legal-statute/scripts/verify_hang_numbering.py",
+      "args": [],
+      "requires": {
+        "paths": [
+          "output/legal/statute/guideline_article_corpus.jsonl.gz",
+          "output/legal/statute/수립지침_항구조.json"
+        ],
+        "modules": []
+      },
+      "checks": "비조문형 전문의 번호 shape 선언·건수·항 줄집합·문자 도메인·원문 왕복·전문 SHA256을 corpus 원자료에서 독립 재계산한다",
+      "exitCodes": "0=통과 · 1=입력 오류 · 2=문서 프로파일 미선언 · 3=계약 위반",
+      "note": "기본 document_key 의 프로파일과 구조 산출물이 있어야 실행한다. 구조 산출물이 없으면 검사가 아니라 입력 부재이므로 선행조건에서 미검사로 가른다"
+    },
+    {
+      "id": "legal-xref/verify_contract",
+      "team": "legal",
+      "skill": "legal-xref",
+      "order": 10,
+      "kind": "계약 검증",
+      "script": ".claude/skills/legal/legal-xref/scripts/verify_contract.py",
+      "args": [
+        "--full"
+      ],
+      "requires": {
+        "paths": [
+          "output/legal/xref/xref_index.json",
+          "output/legal/xref/xref_by_article.json",
+          "output/legal/xref/_xref_report.json",
+          "output/legal/markdown/*/*.md",
+          "output/legal/statute/statute_master.json"
+        ],
+        "modules": []
+      },
+      "checks": "xref.schema.json 구조 계약, 값 도메인(scope·kind·resolution·relation·master_status), 격리 레코드가 xref_index 에 없음, 역인덱스 양방향 정합(조문→참조·대상→조문), 법령 정본 명칭 대조. --full 은 참조 표기가 근거 발췌와 원문 md 줄에 실재하는지 전건 대조하고 범위 전개 조문이 조문 트리에 실재하는지 본다",
+      "exitCodes": "0=충족 · 1=위반. main() 의 반환값을 sys.exit 로 넘긴다",
+      "note": "--full 이 산출물 밖 원문 md 줄까지 대조하는 유일한 검증기다. legal-statute/verify_statute --full 은 대조 상대가 산출물 자신의 quote 필드라 원문 대조가 아니다. 원문 md 를 요구하므로 선행조건에 markdown glob 을 넣는다"
+    },
+    {
+      "id": "legal-coverage/verify_contract",
+      "team": "legal",
+      "skill": "legal-coverage",
+      "order": 11,
+      "kind": "계약 검증",
+      "script": ".claude/skills/legal/legal-coverage/scripts/verify_contract.py",
+      "args": [],
+      "requires": {
+        "paths": [
+          "output/legal/analysis/_coverage.json"
+        ],
+        "modules": []
+      },
+      "checks": "coverage.schema.json 구조 계약, 단계 사슬(앞 단계 분자 = 뒤 단계 분모), 분모 ≥ 분자, 값 도메인, 미집계 단계의 빈 필드, 제외 시 수치의 범위, 단계별 정본 경로의 실재",
+      "exitCodes": "0=충족 · 1=위반 · 2=검증 불가(리포트 없음)",
+      "note": "어긋남(상류 요약과 원자료 불일치)은 기본 실행에서 실패가 아니다 — 이 리포트가 고칠 대상이 아니라 상류 소유자에게 넘길 관측이기 때문이다. --strict 로만 실패로 돌린다. 다른 검증기와 달리 종료코드 2 를 실제로 낸다"
+    },
+    {
+      "id": "legal-tablecsv/verify_contract",
+      "team": "legal",
+      "skill": "legal-tablecsv",
+      "order": 11.5,
+      "kind": "계약 검증",
+      "script": ".claude/skills/legal/legal-tablecsv/scripts/verify_contract.py",
+      "args": [],
+      "requires": {
+        "paths": [
+          "output/legal/table/tables.csv",
+          "output/legal/table/cells.csv",
+          "output/legal/table/norm_건축계획지표.csv"
+        ],
+        "modules": [
+          "jsonschema"
+        ]
+      },
+      "checks": "norm_건축계획지표.csv 구조·열 순서·값 도메인, 값_수치와 파싱실패사유 배타성, 괄호 단서 보존, 지표-단위 대응, tables/cells 원표 대조, 캡션 근거와 case 기반 비규범 예시표 배제",
+      "exitCodes": "0=실패 없음 · 1=계약 위반 · 2=선행조건 또는 계약 해석 불가",
+      "note": "수집 원장 190지구와 구분한 원본문서 보유 189지구 전수 커버리지 및 2층 생성 멱등성은 생성기·extraction report 확정 전까지 stdout의 미검사 사유로 남는다. 광교지구는 원본 없음이 아니라 EGG_미해제다. 미검사를 통과로 읽지 않는다"
+    },
+    {
+      "id": "legal-table/verify_contract",
+      "team": "legal",
+      "skill": "legal-table",
+      "order": 11.75,
+      "kind": "계약 검증",
+      "script": ".claude/skills/legal/legal-table/scripts/verify_contract.py",
+      "args": [],
+      "requires": {
+        "paths": [
+          "output/legal/table/_table_loss.json",
+          "output/legal/markdown/*/*.md"
+        ],
+        "modules": [
+          "jsonschema"
+        ]
+      },
+      "checks": "표 손실 190지구 계약·원문 줄 대조·분포·조문 무결성·멱등성을 검사하고, 존재하는 규범값·재변환 견적·주어 갭 산출물도 연쇄 검사한다",
+      "exitCodes": "0=전 게이트 통과 · 1=하나 이상 위반 · 2=사용법 오류(argparse)",
+      "note": "값·견적·주어 갭 부속 산출물이 없으면 해당 묶음은 게이트 내부에서 미검사로 출력한다. 구조 검사를 조용히 건너뛰지 않도록 jsonschema 를 선행조건으로 둔다"
+    },
+    {
+      "id": "kb-ontology/validate_ontology",
+      "team": "kb",
+      "skill": "kb-ontology",
+      "order": 12,
+      "kind": "계약 검증",
+      "script": ".claude/skills/kb/kb-ontology/scripts/validate_ontology.py",
+      "args": [],
+      "requires": {
+        "paths": [
+          "output/kb/ontology/*.ttl",
+          "output/kb/shapes/*.ttl",
+          "output/legal/word/taxonomy.json",
+          "output/legal/word/terms.json"
+        ],
+        "modules": [
+          "rdflib",
+          "pyshacl"
+        ]
+      },
+      "checks": "게이트 1~7 — TBox 일관성(순환·미선언 참조·미선언 술어) · det/prob 격리 · det SHACL · prob SHACL · 어휘 대조 · IRI 패턴 · 정규화 멱등·완결",
+      "exitCodes": "0=전 게이트 통과 · 1=실패 게이트 있음",
+      "note": "rdflib·pyshacl 을 모듈 최상단에서 import 한다. 미설치 환경에서는 argparse 도 돌기 전에 ModuleNotFoundError 로 죽으므로 선행조건에 모듈을 명시해 미검사로 가른다. 게이트 1~7 은 skipped 를 내지 않는다 — 세 갈래가 아니라 두 갈래다"
+    },
+    {
+      "id": "kb-ontology/validate_project_core",
+      "team": "kb",
+      "skill": "kb-ontology",
+      "order": 12.5,
+      "kind": "계약 검증",
+      "script": ".claude/skills/kb/kb-ontology/scripts/validate_project_core.py",
+      "args": [],
+      "requires": {
+        "paths": [
+          "output/kb/ontology/project-core.ttl",
+          "output/kb/shapes/project-core.shacl.ttl",
+          "output/kb/graph/det/shinnae2-2008-773.ttl"
+        ],
+        "modules": [
+          "rdflib",
+          "pyshacl"
+        ]
+      },
+      "checks": "Project Core TBox·SHACL shape·pilot graph를 파싱하고 문서-사건 카디널리티·생애주기 출처 분리·출처 신원 분리를 검사한다",
+      "exitCodes": "0=6개 게이트 통과 · 1=하나 이상 실패",
+      "note": "Project Core 슬라이스만 검사한다. 전체 ontology 게이트와 검사 범위가 다르므로 별도 등록한다"
+    },
+    {
+      "id": "kb-ontology/verify_chain",
+      "team": "kb",
+      "skill": "kb-ontology",
+      "order": 13,
+      "kind": "계약 검증",
+      "script": ".claude/skills/kb/kb-ontology/scripts/verify_chain.py",
+      "args": [],
+      "requires": {
+        "paths": [
+          "output/kb/graph/det/*.ttl"
+        ],
+        "modules": [
+          "rdflib"
+        ]
+      },
+      "checks": "게이트 8~13 — 위임 사슬 무결성 · 적용 실제성 · 법률 직접 적용 금지 · 시점 정합 · 시점 근거 필수 · 조문 트리 정합",
+      "exitCodes": "0=실패 게이트 없음 · 1=실패 게이트 있음. 미검사 게이트가 있어도 0 이다",
+      "note": "미검사(skipped)를 게이트 단위로 집계하는 유일한 검증기다. 이 스킬의 세 갈래 집계는 여기서 왔다. pyshacl 은 쓰지 않아 rdflib 만 필요하다"
+    },
+    {
+      "id": "kb-axis-value/invariant_check",
+      "team": "kb",
+      "skill": "kb-axis-value",
+      "order": 14,
+      "kind": "계약 검증",
+      "script": ".claude/skills/kb/kb-axis-value/case/invariant_check.py",
+      "args": [],
+      "requires": {
+        "paths": [
+          "output/kb/norm/graph/det/norm-value/*.ttl",
+          "output/kb/norm/graph/det/delegation.ttl"
+        ],
+        "modules": []
+      },
+      "checks": "축별 canonical RDF 명제의 계약 불변식 — subject·predicate·object 금지 namespace 0건 · 비교연산 배타성 · 값 도메인 · IRI 중복 · 규범역전(기본 조건 IRI 없이 조건값) · 비교연산↔근거발췌 · 근거발췌↔원문 · 주어키↔주어원문(관계 주어는 항·호 대조) · 값기준↔원문 · 위임사슬",
+      "exitCodes": "0=위반 없음 · 1=위반 있음. 명제 0건이면 검사가 공허하므로 1 이다",
+      "note": "halluc_check.py 는 값 실재만 봐서 비교연산·주어·값기준 바꿔치기를 통과시킨다. 둘 다 돌려야 한다. 이 검사기를 고칠 때는 반드시 case/mutation_test.py 로 검출률을 재실측한다 — 종료코드만 보면 거짓 통과한다(실측 미검출 40%를 '잡힘'으로 오판한 적이 있다)"
+    },
+    {
+      "id": "kb-axis-value/halluc_check",
+      "team": "kb",
+      "skill": "kb-axis-value",
+      "order": 15,
+      "kind": "품질 검증",
+      "script": ".claude/skills/kb/kb-axis-value/case/halluc_check.py",
+      "args": [],
+      "requires": {
+        "paths": [
+          "output/kb/norm/graph/det/norm-value/*.ttl"
+        ],
+        "modules": []
+      },
+      "checks": "환각 전수검사 — canonical RDF 조문 IRI로 corpus 조문을 찾고 근거발췌·값이 원문에 실재하는지 확인. 발췌 substring 실패 시 값+단위·분수 표기로 폴백",
+      "exitCodes": "0=전건 확인 · 1=원문 미확인 1건 이상 또는 명제 0건",
+      "note": "값만 본다. 비교연산·주어키·값기준은 invariant_check 가 본다"
+    },
+    {
+      "id": "kb-axis-value/mutation_test",
+      "team": "kb",
+      "skill": "kb-axis-value",
+      "order": 16,
+      "kind": "검사기 검증",
+      "script": ".claude/skills/kb/kb-axis-value/case/mutation_test.py",
+      "args": [],
+      "requires": {
+        "paths": [
+          "output/kb/norm/graph/det/norm-value/*.ttl"
+        ],
+        "modules": []
+      },
+      "checks": "invariant_check 자체를 검증한다. 변이 11종(값 날조·비교연산·근거발췌 연산자·주어키·값기준·관계 항 위조·구간대상·규범역전·canonical namespace 역치환)을 심고 검출률을 실측. namespace 역치환은 축별 파일 4개를 각각 단독 변이해 파일 전건 검출을 요구",
+      "exitCodes": "0=전 변이 기준 충족 · 1=미달",
+      "note": "**검사기를 고칠 때마다 돌린다.** 산출물을 일시적으로 변이시켰다 복원하므로 다른 검증기와 동시에 돌리지 않는다"
+    },
+    {
+      "id": "kb-axis-value/upstream_gate",
+      "team": "kb",
+      "skill": "kb-axis-value",
+      "order": 17,
+      "kind": "선행조건 게이트",
+      "script": ".claude/skills/kb/kb-axis-value/case/upstream_gate.py",
+      "args": [],
+      "requires": {
+        "paths": [
+          "output/legal/table/norm_values.json",
+          "output/legal/table/_norm_value_report.json"
+        ],
+        "modules": []
+      },
+      "checks": "시행지침 규범값을 소비하기 전 legal-table 하위축_소비계약 충족 — 격리 동반 읽기 · 관계 필드 값 도메인 · 기준/허용 짝 잇기 · 미발급을 부재로 안 읽기 · relation_role 의 det 층 유출 금지",
+      "exitCodes": "0=소비 가능 · 1=선행조건 불충족",
+      "note": "발급자(legal-table) 검증기는 이 계약을 강제할 수 없다. 계약을 어기는 것은 소비하는 축이고 어겼는지는 소비하는 축에서만 보인다. 이 축이 시행지침 값을 실제로 소비하기 전에 미리 걸어 둔 게이트다"
+    },
+    {
+      "id": "ppt-verify/verify_deck",
+      "team": "ppt",
+      "skill": "ppt-verify",
+      "order": 18,
+      "kind": "품질 검증",
+      "script": ".claude/skills/ppt/ppt-verify/scripts/verify_deck.py",
+      "args": [],
+      "requires": {
+        "paths": [
+          "output/ppt/*/01_source.json",
+          "output/ppt/*/02_deck.json",
+          "output/ppt/*/build/_build_report.json",
+          "output/ppt/*/build/deck.pptx"
+        ],
+        "modules": [
+          "jsonschema",
+          "pptx"
+        ]
+      },
+      "checks": "PPTX ZIP·슬라이드 순번·표지·스펙 텍스트 수록·제목 문체·본문 명사형 종결·fact_refs·표시 숫자와 fact 값 결박·원천 fact 재측정·본문/캡션 분모·artifact identity·상류 해시·미리보기 고정경로·폰트 폴백·육안확인·반박검증 기록·한계 슬라이드 대응",
+      "exitCodes": "0=전 덱 accept · 1=실패 또는 미검사가 있는 덱 존재 · 2=검증할 덱 없음",
+      "note": "검증 대상 파일은 수정하지 않고 output/ppt/<deck-id>/03_qa.json 과 03_qa.md 만 쓴다. 미검사는 reject 로 판정한다. 공통 runner 실행 시 PPT_ADVERSARIAL_REVIEW_NOTE 에 이번 실행의 반박검증 대상·범위·결과를 전달한다"
+    }
+  ]
+}

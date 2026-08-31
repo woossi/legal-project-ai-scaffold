@@ -1,0 +1,397 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "legal-table/contract/norm_value.schema.json",
+  "title": "norm_values.json · _norm_value_report.json — 건폐율·용적률 값 레코드",
+  "type": "object",
+  "required": ["meta", "records"],
+  "additionalProperties": false,
+  "properties": {
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["생성기", "입력", "줄번호규약", "관측_전건", "확정", "격리",
+                   "모수_규약", "레코드수"],
+      "properties": {
+        "생성기": {"const": "legal-table/scripts/extract_values.py"},
+        "입력": {"const": "output/legal/markdown/{서울,인천,경기}/*.md"},
+        "줄번호규약": {
+          "type": "string",
+          "pattern": "물리 줄번호\\(1-based\\)"
+        },
+        "관측_전건": {"type": "integer", "minimum": 0},
+        "확정": {"type": "integer", "minimum": 0},
+        "격리": {"type": "integer", "minimum": 0},
+        "레코드수": {"type": "integer", "minimum": 0},
+        "전체문서수": {"const": 189},
+        "값보유문서수": {"type": "integer", "minimum": 0, "maximum": 189},
+        "규범값수": {"type": "integer", "minimum": 0},
+        "모수_규약": {
+          "type": "array", "items": {"type": "string"}, "minItems": 4,
+          "description": "커버리지 분모를 필드마다 명시한다. 값 보유 문서 93 은 md 회수 상한, 189 는 전체 문서, 45 는 조례 대조 커버리지 — 한 분모로 섞지 않는다"
+        },
+        "comparator_분포": {"$ref": "#/$defs/nonNegativeCountMap"},
+        "context_class_분포": {"$ref": "#/$defs/nonNegativeCountMap"},
+        "metric_분포": {"$ref": "#/$defs/nonNegativeCountMap"},
+        "row_shape_분포": {"$ref": "#/$defs/nonNegativeCountMap"},
+        "subject_basis_분포": {"$ref": "#/$defs/nonNegativeCountMap"},
+        "subject_type_분포": {"$ref": "#/$defs/nonNegativeCountMap"},
+        "주어해소": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["해소", "미해소", "미해소_다중값행"],
+          "properties": {
+            "해소": {"type": "integer", "minimum": 0},
+            "미해소": {"type": "integer", "minimum": 0},
+            "미해소_다중값행": {"type": "integer", "minimum": 0}
+          }
+        },
+        "한계": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+        "설명": {"type": "string", "minLength": 1},
+        "quarantine_class_분포": {"$ref": "#/$defs/nonNegativeCountMap"},
+        "관계필드": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "발급", "미발급", "격리_전건", "어휘후보", "짝특정",
+            "role_분포", "relation_basis_분포", "미발급사유_분포",
+            "약한근거", "모수_규약", "한계"
+          ],
+          "properties": {
+            "발급": {"type": "integer", "minimum": 0},
+            "미발급": {"type": "integer", "minimum": 0},
+            "격리_전건": {"type": "integer", "minimum": 0},
+            "어휘후보": {"type": "integer", "minimum": 0},
+            "짝특정": {"type": "integer", "minimum": 0},
+            "role_분포": {
+              "type": "object",
+              "propertyNames": {"enum": ["기준", "허용", "상한", "기본"]},
+              "additionalProperties": {"type": "integer", "minimum": 0}
+            },
+            "relation_basis_분포": {
+              "type": "object",
+              "propertyNames": {"enum": ["동일줄_직접수식", "동일줄_순서대응"]},
+              "additionalProperties": {"type": "integer", "minimum": 0}
+            },
+            "미발급사유_분포": {
+              "type": "object",
+              "propertyNames": {
+                "enum": ["비율피연산자", "타지표값", "인센티브증분", "산식피연산자",
+                         "역할어휘아님", "수식어어휘없음"]
+              },
+              "additionalProperties": {"type": "integer", "minimum": 0}
+            },
+            "약한근거": {
+              "type": "array",
+              "items": {"type": "string", "pattern": "^V[0-9]{6}$"}
+            },
+            "모수_규약": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+            "한계": {"type": "array", "items": {"type": "string"}, "minItems": 1}
+          }
+        }
+      }
+    },
+    "records": {"type": "array", "items": {"$ref": "#/$defs/value"}}
+  },
+  "$defs": {
+    "nonNegativeCountMap": {
+      "type": "object",
+      "additionalProperties": {"type": "integer", "minimum": 0}
+    },
+    "value": {
+      "type": "object",
+      "required": [
+        "value_id", "line_text", "surface", "surface_offset", "quote",
+        "metric", "metric_surface", "value", "unit", "notation",
+        "comparator", "comparator_basis", "range",
+        "dstrcAppnNo", "lc5", "지역", "source_file", "line",
+        "article", "section", "table_caption", "example_zone",
+        "subject", "subject_surface", "subject_type", "subject_basis",
+        "subject_reason", "row_shape", "value_ordinal", "row_value_count",
+        "context_class", "context_basis", "extraction_method", "ocr_risk"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "value_id": {"type": "string", "pattern": "^V[0-9]{6}$"},
+
+        "line_text": {
+          "type": "string",
+          "description": "원문 줄 그대로. surface_offset 은 이 문자열 기준이다"
+        },
+        "surface": {"type": "string", "minLength": 1},
+        "surface_offset": {
+          "type": "array", "items": {"type": "integer", "minimum": 0},
+          "minItems": 2, "maxItems": 2
+        },
+        "quote": {"type": "string"},
+
+        "metric": {
+          "oneOf": [{"type": "null"}, {"enum": ["건폐율", "용적률"]}],
+          "description": "격리 레코드는 null 일 수 있다(지표미상). 확정 레코드는 아래 allOf 가 null 을 막는다"
+        },
+        "metric_surface": {
+          "oneOf": [{"type": "null"}, {"enum": ["건폐율", "용적률", "용적율"]}],
+          "description": "원문 표기. `용적율` 오기를 보존한다"
+        },
+        "value": {"type": "number", "minimum": 0},
+        "unit": {"const": "percent"},
+        "notation": {"enum": ["퍼센트기호", "퍼센트한글", "100분의"]},
+        "comparator": {
+          "oneOf": [
+            {"type": "null"},
+            {"enum": ["이하", "이상", "미만", "초과", "이내", "까지"]}
+          ],
+          "description": "값 직후 6자 이내에서만 읽는다. 못 읽으면 null 이고 그 레코드는 격리한다 — **기본값을 주입하지 않는다.** 근거 없는 `이하` 를 만든 선례가 있다"
+        },
+        "comparator_basis": {
+          "oneOf": [{"type": "null"}, {"const": "값직후인접"}]
+        },
+        "range": {"type": "null"},
+
+        "dstrcAppnNo": {"type": "string", "pattern": "^[0-9]{5}[A-Z]{2}[0-9]{7}$"},
+        "lc5": {"type": "string", "pattern": "^[0-9]{5}$"},
+        "지역": {"enum": ["서울", "인천", "경기"]},
+        "source_file": {"type": "string", "pattern": "^output/legal/markdown/"},
+        "line": {
+          "type": "integer", "minimum": 1,
+          "description": "md 파일 물리 줄번호(1-based). body 오프셋이 아니다"
+        },
+        "article": {
+          "oneOf": [
+            {"type": "null"},
+            {
+              "type": "object",
+              "required": ["no", "label", "line", "origin"],
+              "additionalProperties": false,
+              "properties": {
+                "no": {"type": "string"}, "label": {"type": "string"},
+                "line": {"type": "integer", "minimum": 1},
+                "origin": {"const": "조문헤딩"}
+              }
+            }
+          ]
+        },
+        "article_reason": {"type": "string", "minLength": 1},
+        "section": {
+          "oneOf": [
+            {"type": "null"},
+            {
+              "type": "object",
+              "required": ["heading", "line"],
+              "additionalProperties": false,
+              "properties": {
+                "heading": {"type": "string"},
+                "line": {"type": "integer", "minimum": 1}
+              }
+            }
+          ]
+        },
+        "table_caption": {
+          "oneOf": [
+            {"type": "null"},
+            {
+              "type": "object",
+              "required": ["text", "line", "distance"],
+              "additionalProperties": false,
+              "properties": {
+                "text": {"type": "string"},
+                "line": {"type": "integer", "minimum": 1},
+                "distance": {"type": "integer", "minimum": 1, "maximum": 12}
+              }
+            }
+          ]
+        },
+
+        "example_zone": {
+          "description": "이 값이 예시 도해 캡션 구간 안에 있으면 그 근거 캡션. 값의 자격 판정 근거이며 원문으로 되짚을 수 있어야 한다. null 이면 구간 밖이다",
+          "oneOf": [
+            {"type": "null"},
+            {
+              "type": "object",
+              "required": ["kind", "caption", "caption_line", "range"],
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "enum": ["표", "별표", "그림", "사진", "도면", "예시선언"],
+                  "description": "예시선언 은 캡션 참조(`<그림…>`) 없이 줄 전체가 예시 선언(`예)`)인 구간이다. 이걸 안 열면 마커가 값 줄에 같이 있는 건만 잡히고 바로 다음 줄의 같은 도해 값이 규범으로 남는다 — 상계 장암 59줄(잡힘) 대 61줄(놓침)"
+                },
+                "caption": {"type": "string", "minLength": 1},
+                "caption_line": {"type": "integer", "minimum": 1},
+                "range": {
+                  "type": "array", "items": {"type": "integer", "minimum": 1},
+                  "minItems": 2, "maxItems": 2
+                }
+              }
+            }
+          ]
+        },
+
+        "subject": {"type": ["string", "null"]},
+        "subject_surface": {"type": ["string", "null"]},
+        "subject_type": {
+          "oneOf": [
+            {"type": "null"},
+            {"enum": ["용도지역", "용지", "블록·획지", "그밖", "미상"]}
+          ],
+          "description": "용지 → 용도지역 매핑은 만들지 않는다. 원문 주어를 보존하고 분류만 한다"
+        },
+        "subject_basis": {
+          "oneOf": [
+            {"type": "null"},
+            {"enum": ["동일줄_인접명시", "산문문장주어", "단일값_표캡션",
+                      "단일값_장절"]}
+          ]
+        },
+        "subject_reason": {
+          "oneOf": [
+            {"type": "null"},
+            {"enum": ["다중값행_열정렬불가", "근거강한주어없음"]}
+          ]
+        },
+
+        "row_shape": {"enum": ["단일값", "다중값"]},
+        "value_ordinal": {"type": "integer", "minimum": 1},
+        "row_value_count": {"type": "integer", "minimum": 1},
+        "context_class": {
+          "enum": ["규범", "예시도면표시", "완화총량", "산정식", "타지표",
+                   "인용서술"],
+          "description": "규범 외는 확정 집계에서 뺀다. 격리하지 않고 플래그로 남긴다 — 격리는 판정할 수 없는 것의 자리이지 규범이 아닌 것의 자리가 아니다. 인용서술 은 주어가 인용 법령이고 서술어가 `규정하고 있음` 인 값이다. **인용 어휘가 있다는 것만으로는 인용서술이 아니다** — 인용 표기가 있는 규범값 62건이 전부 이 지구의 규범이며, 인용은 근거 제시이지 자격 박탈이 아니다. 판정표(scripts/extract_values.py CITATION_DESCR)로만 발급한다"
+        },
+        "context_basis": {"type": "string", "minLength": 1},
+        "extraction_method": {
+          "enum": ["hwp5txt", "hwp5html(표포함)", "PDF",
+                   "OCR(tesseract kor)", "hwp5proc(레코드)"]
+        },
+        "ocr_risk": {"type": "boolean"},
+
+        "quarantine_class": {
+          "enum": ["비교표현없음", "지표미상", "지표귀속불가"],
+          "description": "_norm_value_report.json 에만 있다"
+        },
+        "quarantine_reason": {"type": "string", "minLength": 1},
+
+        "relation_role": {
+          "oneOf": [{"type": "null"}, {"enum": ["기준", "허용", "상한", "기본"]}],
+          "description": "값의 역할. **원문 수식어가 그 값의 지표를 직접 수식할 때만 발급한다.** 문맥상 기본값 같다는 이유로 붙이지 않는다 — 이건 새 주장이므로 근거 요건이 값 추출보다 높다"
+        },
+        "relation_basis": {
+          "oneOf": [
+            {"type": "null"},
+            {"enum": ["동일줄_직접수식", "동일줄_순서대응"]}
+          ],
+          "description": "발급 근거의 **종류이자 강도**다. `동일줄_직접수식` 은 수식어가 값의 지표를 구문상 직접 수식한 것, `동일줄_순서대응` 은 지표명 나열과 값 나열의 위치로 귀속한 것이라 더 약하다. 하위 축은 이 값으로 걸러 쓴다 — relation_note 는 자유 텍스트라 기계 필터가 아니다. 줄을 건너 잇는 근거는 아직 없다"
+        },
+        "relation_quote": {
+          "type": ["string", "null"], "minLength": 1,
+          "description": "근거 발췌. line_text 의 부분문자열이어야 하며 검증기가 전수 대조한다"
+        },
+        "relation_pair": {
+          "oneOf": [{"type": "null"}, {"type": "string", "pattern": "^V[0-9]{6}$"}],
+          "description": "관계의 상대편 value_id. 같은 줄에서 특정될 때만 채운다"
+        },
+        "relation_note": {"type": ["string", "null"], "minLength": 1},
+        "relation_reason": {
+          "oneOf": [
+            {"type": "null"},
+            {"enum": ["비율피연산자", "타지표값", "인센티브증분", "산식피연산자",
+                      "역할어휘아님", "수식어어휘없음"]}
+          ],
+          "description": "미발급 사유. 발급되지 않은 격리 전건에 반드시 있다 — 결손 0 이 계약이다"
+        }
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"article": {"type": "null"}}},
+          "then": {"required": ["article_reason"]}
+        },
+        {
+          "$comment": "확정 레코드(격리되지 않은 것)는 metric·comparator 가 반드시 있다. 격리 레코드에만 null 이 허용된다 — 판정할 수 없는 것은 확정에 넣지 않는다.",
+          "if": {"not": {"required": ["quarantine_class"]}},
+          "then": {
+            "properties": {
+              "metric": {"enum": ["건폐율", "용적률"]},
+              "metric_surface": {"enum": ["건폐율", "용적률", "용적율"]},
+              "comparator": {
+                "enum": ["이하", "이상", "미만", "초과", "이내", "까지"]
+              },
+              "comparator_basis": {"const": "값직후인접"}
+            }
+          }
+        },
+        {
+          "$comment": "격리 레코드는 사유가 반드시 있다. 관계 필드도 격리에만 있으며 전 필드가 함께 있어야 한다 — 일부만 있으면 발급인지 미발급인지 하위 축이 가를 수 없다.",
+          "if": {"required": ["quarantine_class"]},
+          "then": {
+            "required": ["quarantine_reason", "relation_role", "relation_basis",
+                         "relation_quote", "relation_pair", "relation_note",
+                         "relation_reason"]
+          }
+        },
+        {
+          "$comment": "확정 레코드에는 관계 필드를 붙이지 않는다. 확정값의 역할 어휘는 이번 검토 범위 밖이며, 붙이면 검토하지 않은 것이 발급된 것처럼 보인다.",
+          "if": {"not": {"required": ["quarantine_class"]}},
+          "then": {
+            "not": {
+              "anyOf": [
+                {"required": ["relation_role"]},
+                {"required": ["relation_reason"]}
+              ]
+            }
+          }
+        },
+        {
+          "$comment": "발급되면 근거 발췌와 근거 서술이 있고 미발급 사유는 비어야 한다. 발급과 미발급이 동시에 성립하면 하위 축이 어느 쪽을 믿을지 알 수 없다.",
+          "if": {
+            "required": ["relation_role"],
+            "properties": {"relation_role": {"type": "string"}}
+          },
+          "then": {
+            "properties": {
+              "relation_basis": {"enum": ["동일줄_직접수식", "동일줄_순서대응"]},
+              "relation_quote": {"type": "string", "minLength": 1},
+              "relation_note": {"type": "string", "minLength": 1},
+              "relation_reason": {"type": "null"}
+            }
+          }
+        },
+        {
+          "$comment": "순서 대응은 구문상 직접 수식이 아니므로 왜 그 위치가 그 지표인지 근거 서술이 반드시 있어야 한다. 약한 근거를 서술 없이 두면 하위 축이 왜 약한지 알 수 없다.",
+          "if": {
+            "required": ["relation_basis"],
+            "properties": {"relation_basis": {"const": "동일줄_순서대응"}}
+          },
+          "then": {"required": ["relation_note"],
+                   "properties": {"relation_note": {"type": "string", "minLength": 1}}}
+        },
+        {
+          "$comment": "미발급이면 사유가 반드시 있고 근거 발췌·짝은 비어야 한다.",
+          "if": {
+            "required": ["relation_role"],
+            "properties": {"relation_role": {"type": "null"}}
+          },
+          "then": {
+            "properties": {
+              "relation_basis": {"type": "null"},
+              "relation_quote": {"type": "null"},
+              "relation_pair": {"type": "null"},
+              "relation_reason": {"type": "string", "minLength": 1}
+            }
+          }
+        },
+        {
+          "$comment": "row_value_count >= 2 이면 subject 를 붙이지 않는다. 판정 실패가 아니라 계약이다 — 헤더와 값의 열수가 실제로 어긋나 복원하면 조작이 된다",
+          "if": {
+            "properties": {"row_value_count": {"minimum": 2}},
+            "required": ["row_value_count"]
+          },
+          "then": {
+            "properties": {
+              "subject": {"type": "null"},
+              "subject_basis": {"type": "null"},
+              "subject_reason": {"const": "다중값행_열정렬불가"}
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,131 @@
+# 팀 로스터
+#
+# CLAUDE.md 규칙: 팀 구성 시 이 파일을 읽고, 각 항목의 agent_type으로 팀원을
+# 생성하며 teammate 값을 이름으로 지정한다. 실제 런타임 설정은 Claude가
+# ~/.claude/teams/ 아래에서 관리한다.
+#
+# 규약
+#  - teammate   : 생성된 팀원에게 부여할 이름 (Agent 도구의 name)
+#  - agent_type : .claude/agents/ 아래 정의된 에이전트 정의 이름
+#  - role       : 담당 업무 (사람이 읽는 용도)
+#  - required_skills : 팀원이 반드시 먼저 읽을 스킬
+#  - 이 파일에 없는 에이전트는 팀원으로 생성하지 않는다.
+#
+# owner는 생성 대상이 아니므로 여기 두지 않는다.
+
+teams:
+  legal:
+    description: 택지개발지구 법령제도 자료 수집·검토
+    members:
+      - teammate: legal-collector
+        agent_type: legal-collector
+        role: 수집
+        required_skills:
+          - legal-dup
+          - legal-decmap
+        description: 택지정보 파일데이터 지구 마스터와 택지정보시스템 시행지침·도면 수집.
+          지구 마스터는 첨부 원장과 분리하고 첨부 다운로드는 순차 실행 규칙을 준수한다.
+          도면(코드 2·4·5)은 legal-decmap 의 절대 규칙을 먼저 읽는다 — 이름 충돌이
+          기존 코퍼스를 덮어쓴다.
+      - teammate: legal-counsel
+        agent_type: legal-counsel
+        role: 법령검토
+        description: 유효 택지개발지구 판정 및 시행지침 법령 검토.
+      - teammate: legal-xref
+        agent_type: legal-xref
+        role: 참조해소
+        description: 조문 단위 외부 참조 검색·해소. 인용 간선과 법제처 법령 정본 대조.
+
+  kb:
+    description: 수집 자료의 지식베이스화·그래프화
+    members:
+      - teammate: kb-planner
+        agent_type: kb-planner
+        role: 스키마기획
+        required_skills:
+          - kb-plan
+        description: 클래스·관계 설계와 실질충돌 용어의 통합·분리 판단. 구축 이전 단계.
+      - teammate: kb-normalizer
+        agent_type: kb-normalizer
+        role: 정규화
+        required_skills:
+          - kb-norm
+          - kb-ontology
+        description: legal 산출물을 KB 적재 전 정규화하고 output/kb/norm/ 아래에 기록.
+      - teammate: kb-axis
+        agent_type: kb-axis
+        role: 축값추출
+        required_skills:
+          - kb-axis-value
+        description: 위임축 3~16 규범값을 지자체 조례에서 추출. 못 뽑는 축은 사유와 함께 기록.
+      - teammate: kb-engineer
+        agent_type: kb-engineer
+        role: 지식베이스
+        required_skills:
+          - kb-ontology
+          - kb-plan
+          - contract-verify
+        description: OWL/TTL 온톨로지·SQLite 구축. counsel 산출물을 입력으로 구조화.
+      - teammate: qa-verifier
+        agent_type: qa-verifier
+        role: 검증
+        required_skills:
+          - contract-verify
+          - adversarial-review
+          - legal-coverage
+        description: KB 번들에서 재사용하는 산출물 중립 검증자. KB 산출물을 소유하거나 고치지 않는다.
+
+  viz:
+    description: 산출물 시각화 — 지식그래프·의존성그래프·통계도표·공간도면
+    members:
+      - teammate: viz-graph
+        agent_type: viz-graph
+        role: 그래프
+        description: 지식그래프·법령 의존성그래프·파이프라인 의존성그래프. networkx/graphviz/pyvis.
+      - teammate: viz-chart
+        agent_type: viz-chart
+        role: 도표
+        description: 도수분포·교차표·분류축 분포·정의 분기 다이어그램. matplotlib/plotly.
+      # gis-figure-designer 는 user 스코프(~/.claude/agents/)에 이미 정의돼 있다.
+      # 새로 만들지 말고 그대로 편입해 쓴다.
+      - teammate: gis-figure-designer
+        agent_type: gis-figure-designer
+        role: 공간
+        description: 지구 위치도·단계구분도·공간자기상관. 기존 에이전트 재사용.
+
+  ppt:
+    description: 구조화된 팀 산출물을 근거 추적이 가능한 발표 덱으로 작성·렌더·검증
+    members:
+      - teammate: ppt-curator
+        agent_type: ppt-curator
+        role: 근거선별
+        required_skills:
+          - ppt-source
+          - contract-verify
+        description: 입력 파일의 해시·기준시점·대상·기간·공간 단위·비교 기준을 실측해 01_source.json을 작성.
+      - teammate: ppt-writer
+        agent_type: ppt-writer
+        role: 덱저작
+        required_skills:
+          - ppt-deck
+        description: 01_source.json의 fact만 사용해 역할명형 제목과 명사형 본문의 02_deck.json을 작성.
+      - teammate: ppt-renderer
+        agent_type: ppt-renderer
+        role: 렌더링
+        required_skills:
+          - ppt-render
+        description: 02_deck.json을 PPTX·PDF·미리보기·빌드 자기보고로 변환.
+      - teammate: ppt-verifier
+        agent_type: ppt-verifier
+        role: 검증
+        required_skills:
+          - ppt-verify
+          - contract-verify
+          - adversarial-review
+        description: 상류를 수정하지 않고 계약·근거·문체·렌더 결과를 검증해 03_qa.json과 03_qa.md를 작성.
+
+  # 스킬 네임스페이스 .claude/skills/common/ 과 짝을 맞춘 산출물 중립 자리다.
+  # 검증자는 필요한 팀 번들에서 재사용하되 특정 팀 산출물의 소유자가 아니다.
+  common:
+    description: 산출물 중립 검증 — 계약 검증기 일괄 실행·게이트 집계·반박검증
+    members: []

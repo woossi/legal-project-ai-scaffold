@@ -1,0 +1,418 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "output/legal/contrast/ 산출물 구조",
+ "설명": "파일별 최상위 구조와 레코드 필수 필드. 값 도메인과 교차 제약은 outputs.json 에 있다.",
+ "$defs": {
+  "countMap": {
+   "type": "object",
+   "additionalProperties": {"type": "integer", "minimum": 0}
+  },
+  "districtId": {
+   "type": "string",
+   "pattern": "^[0-9]{5}[A-Z]{2}[0-9]{7}$"
+  },
+  "axis": {
+   "enum": ["시기", "자치구", "주체", "근거법령"]
+  },
+  "targetAxis": {
+   "enum": ["시기", "자치구", "주체", "근거법령", "동일"]
+  },
+  "tier": {
+   "enum": ["A", "B", "C"]
+  },
+  "pairTier": {
+   "enum": ["A", "B", "C", "BASE"]
+  },
+  "strength": {
+   "enum": ["금지", "의무", "권장", "허용", "서술", "미분류"]
+  },
+  "facets": {
+   "type": "object",
+   "required": ["meta", "districts"],
+   "additionalProperties": false,
+   "properties": {
+    "meta": {
+     "type": "object",
+     "required": ["생성스크립트", "지구수", "지구번호_파싱실패", "자치구수", "시기구간근거", "축분포"],
+     "additionalProperties": false,
+     "properties": {
+      "생성스크립트": {"const": "scripts/build_facets.py"},
+      "지구수": {"type": "integer", "minimum": 0},
+      "지구번호_파싱실패": {"type": "array", "items": {"type": "string"}},
+      "자치구수": {"type": "integer", "minimum": 0},
+      "시기구간근거": {"type": "string", "minLength": 1},
+      "축분포": {"type": "object", "additionalProperties": {"$ref": "#/$defs/countMap"}}
+     }
+    },
+    "districts": {"type": "array", "items": {"$ref": "#/$defs/district"}}
+   }
+  },
+  "district": {
+   "type": "object",
+   "required": ["지구번호", "지구명", "시기", "시기라벨", "지정연도", "자치구", "광역",
+                "주체", "주체계열", "시행자원문", "근거법령", "사업구분코드", "사업단계",
+                "면적구간", "표마커수", "구조유형", "구조신뢰도"],
+   "additionalProperties": false,
+   "properties": {
+    "지구번호": {"$ref": "#/$defs/districtId"},
+    "지구명": {"type": "string", "minLength": 1},
+    "시기": {"enum": ["P1", "P2", "P3"]},
+    "시기라벨": {"type": "string", "minLength": 1},
+    "지정연도": {"type": "integer", "minimum": 1990, "maximum": 2030},
+    "자치구": {"type": "string", "pattern": "^[0-9]{5}$"},
+    "광역": {"enum": ["서울", "경기", "인천"]},
+    "주체": {"type": "string", "minLength": 1},
+    "주체계열": {"enum": ["공공", "민간", "불명"]},
+    "시행자원문": {"type": "string"},
+    "근거법령": {"type": "string", "minLength": 1},
+    "사업구분코드": {"type": "string", "pattern": "^[A-Z]{2}$"},
+    "사업단계": {"type": "string", "minLength": 1},
+    "면적구간": {"type": "string", "minLength": 1},
+    "표마커수": {"type": "integer", "minimum": 0},
+    "구조유형": {"type": "string", "minLength": 1},
+    "구조신뢰도": {"type": "string", "minLength": 1}
+   }
+  },
+  "pairs": {
+   "type": "object",
+   "required": ["meta", "pairs"],
+   "additionalProperties": false,
+   "properties": {
+    "meta": {
+     "type": "object",
+     "required": ["생성스크립트", "쌍수", "대상축", "tier정의", "중복제거", "tier별_대상축별_쌍수"],
+     "additionalProperties": false,
+     "properties": {
+      "생성스크립트": {"const": "scripts/build_facets.py"},
+      "쌍수": {"type": "integer", "minimum": 0},
+      "대상축": {"type": "array", "items": {"$ref": "#/$defs/axis"}},
+      "tier정의": {"type": "array", "items": {"$ref": "#/$defs/tierDefinition"}},
+      "중복제거": {"type": "string", "minLength": 1},
+      "tier별_대상축별_쌍수": {"$ref": "#/$defs/countMap"}
+     }
+    },
+    "pairs": {"type": "array", "items": {"$ref": "#/$defs/pair"}}
+   }
+  },
+  "tierDefinition": {
+   "type": "object",
+   "required": ["tier", "설명", "대상축별_통제축"],
+   "additionalProperties": false,
+   "properties": {
+    "tier": {"$ref": "#/$defs/tier"},
+    "설명": {"type": "string", "minLength": 1},
+    "대상축별_통제축": {
+     "type": "object",
+     "required": ["시기", "자치구", "주체", "근거법령"],
+     "additionalProperties": false,
+     "properties": {
+      "시기": {"type": "array", "items": {"type": "string", "minLength": 1}},
+      "자치구": {"type": "array", "items": {"type": "string", "minLength": 1}},
+      "주체": {"type": "array", "items": {"type": "string", "minLength": 1}},
+      "근거법령": {"type": "array", "items": {"type": "string", "minLength": 1}}
+     }
+    }
+   }
+  },
+  "pair": {
+   "type": "object",
+   "required": ["pair_id", "대상축", "tier", "tier설명", "통제축", "통제값", "A", "B", "A값", "B값"],
+   "additionalProperties": false,
+   "properties": {
+    "pair_id": {"type": "string", "minLength": 1},
+    "대상축": {"$ref": "#/$defs/targetAxis"},
+    "tier": {"$ref": "#/$defs/pairTier"},
+    "tier설명": {"type": "string", "minLength": 1},
+    "통제축": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "통제값": {"type": "object", "additionalProperties": {"type": "string"}},
+    "A": {"$ref": "#/$defs/districtId"},
+    "B": {"$ref": "#/$defs/districtId"},
+    "A값": {"type": "string"},
+    "B값": {"type": "string"}
+   }
+  },
+  "slots": {
+   "type": "object",
+   "required": ["meta", "slots"],
+   "additionalProperties": false,
+   "properties": {
+    "meta": {
+     "type": "object",
+     "required": ["생성스크립트", "대상문서수", "조문표제_보유문서수", "조문표제_미보유문서수",
+                  "커버리지_분모", "슬롯수", "정규화", "목차줄_배제", "근거판정"],
+     "additionalProperties": false,
+     "properties": {
+      "생성스크립트": {"const": "scripts/extract_norms.py"},
+      "대상문서수": {"type": "integer", "minimum": 0},
+      "조문표제_보유문서수": {"type": "integer", "minimum": 0},
+      "조문표제_미보유문서수": {"type": "integer", "minimum": 0},
+      "커버리지_분모": {"type": "string", "minLength": 1},
+      "슬롯수": {"type": "integer", "minimum": 0},
+      "정규화": {"type": "string", "minLength": 1},
+      "목차줄_배제": {"type": "string", "minLength": 1},
+      "근거판정": {"type": "string", "minLength": 1}
+     }
+    },
+    "slots": {"type": "array", "items": {"$ref": "#/$defs/slot"}}
+   }
+  },
+  "slot": {
+   "type": "object",
+   "required": ["slot", "district_count", "coverage", "districts", "제52조호", "판정경로", "법정필수"],
+   "additionalProperties": false,
+   "properties": {
+    "slot": {"type": "string", "minLength": 1},
+    "district_count": {"type": "integer", "minimum": 0},
+    "coverage": {"type": "number", "minimum": 0, "maximum": 1},
+    "districts": {"type": "array", "items": {"$ref": "#/$defs/districtId"}},
+    "제52조호": {"type": ["string", "null"]},
+    "판정경로": {"type": ["string", "null"], "enum": ["slot_exact", "slot_pattern", null]},
+    "법정필수": {"type": "boolean"}
+   }
+  },
+  "norms": {
+   "type": "object",
+   "required": ["meta", "norms"],
+   "additionalProperties": false,
+   "properties": {
+    "meta": {
+     "type": "object",
+     "required": ["생성스크립트", "규범문장군집수", "규범문장_보유문서수", "정의문_제외",
+                  "문언변이_판정", "군집범위", "후보생성", "강도등급", "저장형식"],
+     "additionalProperties": false,
+     "properties": {
+      "생성스크립트": {"const": "scripts/extract_norms.py"},
+      "규범문장군집수": {"type": "integer", "minimum": 0},
+      "규범문장_보유문서수": {"type": "integer", "minimum": 0},
+      "정의문_제외": {"type": "string", "minLength": 1},
+      "문언변이_판정": {"type": "string", "minLength": 1},
+      "군집범위": {"type": "string", "minLength": 1},
+      "후보생성": {"type": "string", "minLength": 1},
+      "강도등급": {"type": "array", "items": {"$ref": "#/$defs/strength"}},
+      "저장형식": {"type": "string", "minLength": 1}
+     }
+    },
+    "norms": {"type": "array", "items": {"$ref": "#/$defs/norm"}}
+   }
+  },
+  "norm": {
+   "type": "object",
+   "required": ["norm_id", "representative", "slots", "slot_dispersion", "numeric_signature",
+                "strength", "strength_mix", "variant_count", "district_count", "districts",
+                "variants", "문언변이"],
+   "additionalProperties": false,
+   "properties": {
+    "norm_id": {"type": "string", "pattern": "^N[0-9]{6}$"},
+    "representative": {"type": "string", "minLength": 1},
+    "slots": {"type": "array", "items": {"$ref": "#/$defs/normSlot"}},
+    "slot_dispersion": {"type": "integer", "minimum": 1},
+    "numeric_signature": {"type": "array", "items": {"type": "string"}},
+    "strength": {"$ref": "#/$defs/strength"},
+    "strength_mix": {"$ref": "#/$defs/countMap"},
+    "variant_count": {"type": "integer", "minimum": 1},
+    "district_count": {"type": "integer", "minimum": 1},
+    "districts": {"type": "array", "items": {"$ref": "#/$defs/districtId"}},
+    "variants": {"type": "array", "items": {"$ref": "#/$defs/variant"}},
+    "문언변이": {"enum": ["일치", "표현차이"]}
+   }
+  },
+  "normSlot": {
+   "type": "object",
+   "required": ["slot", "count"],
+   "additionalProperties": false,
+   "properties": {
+    "slot": {"type": "string", "minLength": 1},
+    "count": {"type": "integer", "minimum": 1}
+   }
+  },
+  "variant": {
+   "type": "object",
+   "required": ["text", "districts", "count"],
+   "additionalProperties": false,
+   "properties": {
+    "text": {"type": "string", "minLength": 1},
+    "districts": {"type": "array", "items": {"$ref": "#/$defs/districtId"}},
+    "count": {"type": "integer", "minimum": 1}
+   }
+  },
+  "determinism": {
+   "type": "object",
+   "required": ["meta", "norms"],
+   "additionalProperties": false,
+   "properties": {
+    "meta": {
+     "type": "object",
+     "required": ["생성스크립트", "판정단위", "모수", "모수정의", "세로축_법령근거",
+                  "가로축_문언변이", "보유구간", "보유율_주의", "축귀속_판정기준",
+                  "교차표", "귀속축_분포", "보유구간_분포", "규범군집수_전체",
+                  "수록범위", "미수록_교차표"],
+     "additionalProperties": false,
+     "properties": {
+      "생성스크립트": {"const": "scripts/build_contrast.py"},
+      "판정단위": {"type": "string", "minLength": 1},
+      "모수": {"type": "integer", "minimum": 0},
+      "모수정의": {"type": "string", "minLength": 1},
+      "세로축_법령근거": {"type": "object", "additionalProperties": {"type": "string"}},
+      "가로축_문언변이": {"type": "object", "additionalProperties": {"type": "string"}},
+      "보유구간": {"type": "object", "additionalProperties": {"type": "string"}},
+      "보유율_주의": {"type": "string", "minLength": 1},
+      "축귀속_판정기준": {"type": "object", "additionalProperties": {"type": ["string", "integer", "number"]}},
+      "교차표": {"$ref": "#/$defs/countMap"},
+      "귀속축_분포": {"$ref": "#/$defs/countMap"},
+      "보유구간_분포": {"$ref": "#/$defs/countMap"},
+      "규범군집수_전체": {"type": "integer", "minimum": 0},
+      "수록범위": {"type": "string", "minLength": 1},
+      "미수록_교차표": {"$ref": "#/$defs/countMap"}
+     }
+    },
+    "norms": {"type": "array", "items": {"$ref": "#/$defs/judgment"}}
+   }
+  },
+  "judgment": {
+   "type": "object",
+   "required": ["norm_id", "representative", "district_count", "보유율", "보유구간", "strength",
+                "slot", "slot_dispersion", "제52조호", "근거판정경로", "인용법령", "근거축",
+                "변이축", "귀속축", "기준선불일치율", "기준선유효쌍", "공통tier",
+                "축별불일치율", "문언변이", "variant_count"],
+   "additionalProperties": false,
+   "properties": {
+    "norm_id": {"type": "string", "pattern": "^N[0-9]{6}$"},
+    "representative": {"type": "string", "minLength": 1},
+    "district_count": {"type": "integer", "minimum": 1},
+    "보유율": {"type": "number", "minimum": 0, "maximum": 1},
+    "보유구간": {"enum": ["준보편", "다수", "소수", "희소"]},
+    "strength": {"$ref": "#/$defs/strength"},
+    "slot": {"type": "string", "minLength": 1},
+    "slot_dispersion": {"type": "integer", "minimum": 1},
+    "제52조호": {"type": ["string", "null"]},
+    "근거판정경로": {"type": ["string", "null"], "enum": ["슬롯매핑", "본문인용", null]},
+    "인용법령": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "근거축": {"enum": ["법령근거", "지침총칙", "근거없음"]},
+    "변이축": {"enum": ["축귀속변이", "축무관변이", "지구고유", "표본부족"]},
+    "귀속축": {"type": ["string", "null"], "enum": ["시기", "자치구", "주체", "근거법령", null]},
+    "기준선불일치율": {"type": "number", "minimum": 0, "maximum": 1},
+    "기준선유효쌍": {"type": "integer", "minimum": 0},
+    "공통tier": {"type": ["string", "null"], "enum": ["A", "B", "C", null]},
+    "축별불일치율": {"$ref": "#/$defs/axisRateMap"},
+    "문언변이": {"enum": ["일치", "표현차이"]},
+    "variant_count": {"type": "integer", "minimum": 1}
+   }
+  },
+  "axisRateMap": {
+   "type": "object",
+   "required": ["시기", "자치구", "주체", "근거법령"],
+   "additionalProperties": false,
+   "properties": {
+    "시기": {"oneOf": [{"$ref": "#/$defs/axisRate"}, {"type": "null"}]},
+    "자치구": {"oneOf": [{"$ref": "#/$defs/axisRate"}, {"type": "null"}]},
+    "주체": {"oneOf": [{"$ref": "#/$defs/axisRate"}, {"type": "null"}]},
+    "근거법령": {"oneOf": [{"$ref": "#/$defs/axisRate"}, {"type": "null"}]}
+   }
+  },
+  "axisRate": {
+   "type": "object",
+   "required": ["rate", "pairs", "tier", "delta"],
+   "additionalProperties": false,
+   "properties": {
+    "rate": {"type": "number", "minimum": 0, "maximum": 1},
+    "pairs": {"type": "integer", "minimum": 0},
+    "tier": {"$ref": "#/$defs/tier"},
+    "delta": {"type": "number", "minimum": -1, "maximum": 1}
+   }
+  },
+  "variation": {
+   "type": "object",
+   "required": ["meta", "pairs"],
+   "additionalProperties": false,
+   "properties": {
+    "meta": {
+     "type": "object",
+     "required": ["생성스크립트", "쌍수_전체", "상세저장범위", "집계", "읽는법"],
+     "additionalProperties": false,
+     "properties": {
+      "생성스크립트": {"const": "scripts/build_contrast.py"},
+      "쌍수_전체": {"type": "integer", "minimum": 0},
+      "상세저장범위": {"type": "string", "minLength": 1},
+      "집계": {"type": "object", "additionalProperties": {"$ref": "#/$defs/variationSummary"}},
+      "읽는법": {"type": "string", "minLength": 1}
+     }
+    },
+    "pairs": {"type": "array", "items": {"$ref": "#/$defs/variationPair"}}
+   }
+  },
+  "variationSummary": {
+   "type": "object",
+   "required": ["쌍수", "평균규범일치율", "평균슬롯Jaccard", "구조유형일치율"],
+   "additionalProperties": false,
+   "properties": {
+    "쌍수": {"type": "integer", "minimum": 0},
+    "평균규범일치율": {"type": "number", "minimum": 0, "maximum": 1},
+    "평균슬롯Jaccard": {"type": "number", "minimum": 0, "maximum": 1},
+    "구조유형일치율": {"type": "number", "minimum": 0, "maximum": 1}
+   }
+  },
+  "variationPair": {
+   "type": "object",
+   "required": ["pair_id", "대상축", "tier", "A값", "B값", "공유규범", "A전용", "B전용",
+                "규범일치율", "슬롯Jaccard", "구조유형일치"],
+   "additionalProperties": false,
+   "properties": {
+    "pair_id": {"type": "string", "minLength": 1},
+    "대상축": {"$ref": "#/$defs/targetAxis"},
+    "tier": {"$ref": "#/$defs/pairTier"},
+    "A값": {"type": "string"},
+    "B값": {"type": "string"},
+    "공유규범": {"type": "integer", "minimum": 0},
+    "A전용": {"type": "integer", "minimum": 0},
+    "B전용": {"type": "integer", "minimum": 0},
+    "규범일치율": {"type": "number", "minimum": 0, "maximum": 1},
+    "슬롯Jaccard": {"type": "number", "minimum": 0, "maximum": 1},
+    "구조유형일치": {"type": "boolean"}
+   }
+  },
+  "extraction_gap": {
+   "type": "object",
+   "required": ["meta", "gaps"],
+   "additionalProperties": false,
+   "properties": {
+    "meta": {
+     "type": "object",
+     "required": ["생성스크립트", "근거", "분모", "분모정의", "갭슬롯수"],
+     "additionalProperties": false,
+     "properties": {
+      "생성스크립트": {"const": "scripts/build_contrast.py"},
+      "근거": {"type": "string", "minLength": 1},
+      "분모": {"type": "integer", "minimum": 0},
+      "분모정의": {"type": "string", "minLength": 1},
+      "갭슬롯수": {"type": "integer", "minimum": 0}
+     }
+    },
+    "gaps": {"type": "array", "items": {"$ref": "#/$defs/gap"}}
+   }
+  },
+  "gap": {
+   "type": "object",
+   "required": ["제52조호", "법문", "보유지구수", "분모", "미검출지구수", "coverage", "미검출지구", "해석"],
+   "additionalProperties": false,
+   "properties": {
+    "제52조호": {"type": "string", "minLength": 1},
+    "법문": {"type": "string", "minLength": 1},
+    "보유지구수": {"type": "integer", "minimum": 0},
+    "분모": {"type": "integer", "minimum": 0},
+    "미검출지구수": {"type": "integer", "minimum": 0},
+    "coverage": {"type": "number", "minimum": 0, "maximum": 1},
+    "미검출지구": {"type": "array", "items": {"$ref": "#/$defs/districtId"}},
+    "해석": {"type": "string", "minLength": 1}
+   }
+  }
+ },
+ "파일매핑": {
+  "facets.json": "#/$defs/facets",
+  "pairs.json": "#/$defs/pairs",
+  "slots.json": "#/$defs/slots",
+  "norms.json": "#/$defs/norms",
+  "determinism.json": "#/$defs/determinism",
+  "variation.json": "#/$defs/variation",
+  "_extraction_gap.json": "#/$defs/extraction_gap"
+ }
+}

@@ -1,0 +1,65 @@
+{
+  "$comment": "지식베이스가 읽는 입력 산출물의 취급 계약. 파일 구조의 정본은 legal-term·legal-statute 스킬의 contract/outputs.json 이며, 이 파일은 임포트 시 지켜야 할 취급 규칙만 선언한다.",
+  "inBase": "output/legal",
+  "structureContract": [
+    ".claude/skills/legal/legal-term/contract/outputs.json",
+    ".claude/skills/legal/legal-statute/contract/outputs.json"
+  ],
+  "files": {
+    "word/terms.json": {
+      "role": "용어집 본체",
+      "handling": "원문 문자열과 파생값을 구분해 임포트한다"
+    },
+    "word/definiation.json": {
+      "role": "정의 조항 용어집. 용어 하나에 정의 하나",
+      "handling": "variants_by_rule 이 있는 용어는 갈래를 보존해 임포트한다. 모수 필드는 terms.json 과 분모가 다르므로 같은 이름으로 비교하지 않는다"
+    },
+    "word/doc_definitions.json": {
+      "role": "문서 단위 정의 레코드. 용어 class 는 '법률 용어' 고정",
+      "handling": "definition 은 원문의 절단 요약이고 definition_source_text 가 원문이다. 둘을 같은 필드로 합치지 않는다. definition_source_text 는 변이 병합의 대표 표기라 해당 문서 표기와 구두점 수준에서 다를 수 있다"
+    },
+    "word/taxonomy.json": {
+      "role": "분류 체계",
+      "handling": "B축이 primary 이며 소유자 확정 사항이다. 임의로 변경하지 않는다"
+    },
+    "word/concept_relations.json": {
+      "role": "개념 간 관계 초안",
+      "handling": "근거 원문 검증이 완료된 값이다. 그대로 신뢰해 임포트한다"
+    },
+    "word/_low_confidence_review.json": {
+      "role": "분류 저신뢰 건 검토표",
+      "handling": "소유자 확정 대기 상태이다. 확정 분류로 임포트하지 않는다"
+    },
+    "word/_ocr_only_terms.json": {
+      "role": "OCR 문서에만 있는 용어",
+      "handling": "격리 파일이며 유령 항목이 섞여 있다. 확정 노드로 임포트하지 않는다"
+    },
+    "statute/statute_nodes.json": {
+      "role": "법령 노드. 근거법령 관계의 도착점",
+      "handling": "검증상태가 정본대조가 아닌 노드의 정식명칭은 실측 표기의 정규화값일 뿐이다. 확정 명칭으로 임포트하지 않고 검증상태를 노드 속성으로 함께 담는다. 명칭이 변천한 법령은 merged_keys 로 이전 표기를 흡수한다"
+    },
+    "statute/statute_citations.json": {
+      "role": "시행지침 → 상위법령 인용 간선. origin=지구",
+      "handling": "간선마다 districts 와 quote 가 있다. resolution 이 상대참조해소인 간선은 추론으로 해소한 것이므로 플래그를 보존해 질의에서 거를 수 있게 한다"
+    },
+    "statute/norm_basis.json": {
+      "role": "규범값(건폐율·용적률·높이) 근거 계통. origin=법령",
+      "handling": "준용·위임·완화 관계의 원천이다. 검증상태가 정본대조인 조문에서만 간선을 만든다. 시행일을 반드시 함께 담는다 — 시행지침은 2002~2024년에 걸쳐 있어 현행 조문과 인용 시점이 다를 수 있다"
+    },
+    "statute/_statute_report.json": {
+      "role": "미해소 인용, 어휘 미포착 문자열",
+      "handling": "간선을 만들지 못한 기록이다. 노드·간선으로 임포트하지 않는다"
+    },
+    "analysis/시행지침_목차구조_전수조사.csv": {
+      "role": "시행지침 구조 분석",
+      "handling": "근거등급 A/B/C/D 를 함께 읽는다"
+    }
+  },
+  "handlingRules": [
+    "원문 문자열과 미검증 파생값을 같은 필드에 담지 않는다. 파생값에는 생성 근거를 남긴다. 섞으면 이후 원문 복원이 불가능하다",
+    "source_quality == 'OCR' 인 항목은 수치·단위·기호를 신뢰하지 않는다. 원문자(①~⑳)·㎡·% 가 소실되거나 오인식된다",
+    "classification_confidence == 'low' 인 항목은 확정 분류가 아니다. 소유자 확정 전까지 임시 상태로 표시하고 확정분과 섞어 집계하지 않는다",
+    "검증상태 != '정본대조' 인 법령은 정식 명칭이 확정되지 않은 상태이다. 외부 인용에 쓰지 않고 origin=법령 간선의 끝점으로 삼지 않는다",
+    "지구에서 나온 간선과 법령에서 나온 간선은 근거의 종류가 다르다. graph.json 의 origin 값으로 구분해 임포트하고 요건을 각각 강제한다"
+  ]
+}

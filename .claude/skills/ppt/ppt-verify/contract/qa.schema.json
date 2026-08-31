@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ppt/qa.schema.json",
+  "title": "03_qa.json — 덱 검증 리포트",
+  "type": "object",
+  "required": ["deck_id", "as_of", "verified", "summary", "items", "verdict", "blind_spots"],
+  "additionalProperties": false,
+  "properties": {
+    "deck_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "as_of": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+    "verified": {
+      "type": "object",
+      "description": "검증 대상 파일과 그 시점 해시. 나중에 무엇을 봤는지 재현하는 근거",
+      "required": ["pptx_sha256", "spec_sha256", "source_sha256"],
+      "additionalProperties": false,
+      "properties": {
+        "pptx_sha256": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" },
+        "spec_sha256": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" },
+        "source_sha256": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["passed", "failed", "warned", "unchecked"],
+      "additionalProperties": false,
+      "properties": {
+        "passed": { "type": "integer", "minimum": 0 },
+        "failed": { "type": "integer", "minimum": 0 },
+        "warned": { "type": "integer", "minimum": 0 },
+        "unchecked": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "돌리지 못한 검사. 통과로 세지 않으며 0이 아니면 accept 불가"
+        }
+      }
+    },
+    "items": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "status"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "status": { "enum": ["pass", "fail", "warn", "unchecked"] },
+          "detail": {
+            "type": ["string", "null"],
+            "description": "fail 이면 필수. 무엇이 어떻게 어긋났는지"
+          },
+          "slide_no": { "type": ["integer", "null"], "minimum": 1 },
+          "owner": {
+            "type": ["string", "null"],
+            "enum": ["ppt-curator", "ppt-writer", "ppt-renderer", null],
+            "description": "반려 대상. fail 이면 필수"
+          },
+          "threshold_overridden": {
+            "type": "boolean",
+            "default": false,
+            "description": "기본 판정 등급을 바꿔 적용했으면 true"
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": { "status": { "const": "fail" } },
+              "required": ["status"]
+            },
+            "then": {
+              "required": ["detail", "owner"],
+              "properties": {
+                "detail": { "type": "string", "minLength": 1 },
+                "owner": { "enum": ["ppt-curator", "ppt-writer", "ppt-renderer"] }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "verdict": {
+      "enum": ["accept", "reject"],
+      "description": "failed 0 이고 unchecked 0 일 때만 accept"
+    },
+    "blind_spots": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 2 },
+      "description": "이 검증기가 못 본 것. 비어 있으면 그 자체가 의심 대상이다"
+    },
+    "notes": { "type": "array", "items": { "type": "string" } }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "verdict": { "const": "accept" } },
+        "required": ["verdict"]
+      },
+      "then": {
+        "properties": {
+          "summary": {
+            "properties": {
+              "failed": { "const": 0 },
+              "unchecked": { "const": 0 }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

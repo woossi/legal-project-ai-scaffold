@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://w3id.org/lp/contract/project-core-source.schema.json",
+  "type": "object",
+  "unevaluatedProperties": false,
+  "oneOf": [
+    {"$ref": "#/$defs/officialNotice"},
+    {"$ref": "#/$defs/tisDistrictRecord"}
+  ],
+  "$defs": {
+    "nonEmptyString": {"type": "string", "minLength": 1},
+    "officialNotice": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "recordKind", "documentId", "sourceUrl", "verifiedAt", "extractionMethod", "noticeNumber", "publicationDate", "title", "issuer", "projectNameAsWritten", "districtNameAsWritten", "events", "legalCitationsAsWritten"],
+      "properties": {
+        "schemaVersion": {"const": 1}, "recordKind": {"const": "officialNotice"},
+        "documentId": {"$ref": "#/$defs/nonEmptyString"},
+        "sourceUrl": {"type": "string", "format": "uri", "pattern": "^https?://[^\\s]+$"},
+        "verifiedAt": {"type": "string", "format": "date-time"},
+        "extractionMethod": {"$ref": "#/$defs/nonEmptyString"},
+        "noticeNumber": {"$ref": "#/$defs/nonEmptyString"},
+        "publicationDate": {"type": "string", "format": "date"},
+        "title": {"$ref": "#/$defs/nonEmptyString"},
+        "issuer": {"$ref": "#/$defs/nonEmptyString"},
+        "projectNameAsWritten": {"$ref": "#/$defs/nonEmptyString"},
+        "districtNameAsWritten": {"$ref": "#/$defs/nonEmptyString"},
+        "events": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "uniqueItems": true,
+          "allOf": [
+            {"contains": {"type": "object", "properties": {"eventType": {"const": "developmentPlanChangeApproval"}}, "required": ["eventType"]}},
+            {"contains": {"type": "object", "properties": {"eventType": {"const": "implementationPlanChangeApproval"}}, "required": ["eventType"]}},
+            {"contains": {"type": "object", "properties": {"eventType": {"const": "topographicMapNotice"}}, "required": ["eventType"]}}
+          ],
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["eventId", "eventType", "targetId", "sourceLocator"],
+            "properties": {
+              "eventId": {"$ref": "#/$defs/nonEmptyString"},
+              "eventType": {"enum": ["developmentPlanChangeApproval", "implementationPlanChangeApproval", "topographicMapNotice"]},
+              "targetId": {"$ref": "#/$defs/nonEmptyString"},
+              "sourceLocator": {"$ref": "#/$defs/nonEmptyString"}
+            }
+          }
+        },
+        "legalCitationsAsWritten": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/nonEmptyString"}
+        }
+      }
+    },
+    "tisDistrictRecord": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schemaVersion", "recordKind", "sourceRecordId", "sourcePath", "observationDateTime", "extractionMethod", "fields"],
+      "properties": {
+        "schemaVersion": {"const": 1},
+        "recordKind": {"const": "tisDistrictRecord"},
+        "sourceRecordId": {"$ref": "#/$defs/nonEmptyString"},
+        "sourcePath": {"$ref": "#/$defs/nonEmptyString"},
+        "observationDateTime": {"type": "string", "format": "date-time"},
+        "extractionMethod": {"$ref": "#/$defs/nonEmptyString"},
+        "fields": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["dstrcNm", "lawordNm", "stepNm", "ar", "bsnsOpertnPd", "opertnProfsNm"],
+          "properties": {
+            "dstrcNm": {"$ref": "#/$defs/nonEmptyString"},
+            "lawordNm": {"$ref": "#/$defs/nonEmptyString"},
+            "stepNm": {"$ref": "#/$defs/nonEmptyString"},
+            "ar": {"$ref": "#/$defs/nonEmptyString"},
+            "bsnsOpertnPd": {"$ref": "#/$defs/nonEmptyString"},
+            "opertnProfsNm": {"$ref": "#/$defs/nonEmptyString"}
+          }
+        }
+      }
+    }
+  }
+}

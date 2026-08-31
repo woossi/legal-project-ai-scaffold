@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ppt/build.schema.json",
+  "title": "_build_report.json — 덱 빌드 자기보고",
+  "$comment": "빌드 사실만 담는다. 합격·불합격 집계는 ppt-verify 의 03_qa.json 소유다.",
+  "type": "object",
+  "required": ["deck_id", "spec_sha256", "source_sha256", "profile", "slide_count", "font", "artifacts", "visual_check", "notes"],
+  "additionalProperties": false,
+  "properties": {
+    "deck_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "spec_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "빌드에 쓴 02_deck.json 의 해시"
+    },
+    "source_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "02_deck.json 이 선언한 상류 해시를 그대로 옮긴다. 대조 판정은 ppt-verify 가 한다"
+    },
+    "profile": { "enum": ["docs-ppt-20260813", "none"] },
+    "slide_count": { "type": "integer", "minimum": 1 },
+    "font": {
+      "type": "object",
+      "required": ["requested", "used", "fallback"],
+      "additionalProperties": false,
+      "properties": {
+        "requested": { "type": "string" },
+        "used": { "type": "string" },
+        "fallback": {
+          "type": "boolean",
+          "description": "true 면 요청 폰트가 없어 대체됨. 한글이 네모로 깨지는 원인이며 조용히 넘기지 않는다"
+        },
+        "reason": { "type": ["string", "null"] }
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "required": ["pptx", "pdf", "previews"],
+      "additionalProperties": false,
+      "properties": {
+        "pptx": { "type": "string" },
+        "pdf": {
+          "type": ["string", "null"],
+          "description": "soffice 없으면 null 이며 notes 에 사유를 남긴다"
+        },
+        "previews": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "visual_check": {
+      "type": "object",
+      "description": "렌더러가 눈으로 확인한 기록. 자동 검사와 다른 층이며 ppt-verify 가 대신하지 않는다",
+      "required": ["done", "slides_seen"],
+      "additionalProperties": false,
+      "properties": {
+        "done": { "type": "boolean" },
+        "slides_seen": { "type": "array", "items": { "type": "integer", "minimum": 1 } },
+        "note": { "type": ["string", "null"] }
+      }
+    },
+    "notes": { "type": "array", "items": { "type": "string" } }
+  }
+}

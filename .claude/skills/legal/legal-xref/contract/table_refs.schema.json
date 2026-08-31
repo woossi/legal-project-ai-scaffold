@@ -1,0 +1,226 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "table_refs.schema.json",
+  "title": "조문 표참조 마커 → tables.csv 표 레코드 간선",
+  "$comment": "원문 표기(원문마커·매칭근거.캡션원문)와 해소값(표ID)의 필드를 나눈다. 매칭방법·사유는 이번 실측 관측값으로 고정한 값 도메인이다 — 새 값이 나오면 판정 로직이 바뀐 것이므로 계약을 먼저 갱신한다.",
+  "definitions": {
+    "공통": {
+      "$comment": "공통 필드 묶음이다. concrete branch 는 해소·격리 정의에서 닫는다.",
+      "additionalProperties": false,
+      "required": ["지구번호", "지구명", "지역", "조번호", "조표제", "블록", "행",
+                   "슬롯", "원본파일", "마커유형", "정규화라벨", "원문마커", "언급횟수"],
+      "properties": {
+        "지구번호": {"type": "string", "pattern": "^[0-9]{5}[A-Z]{2}[0-9]{7}$"},
+        "지구명": {"type": "string"},
+        "지역": {"type": "string", "enum": ["경기", "서울", "인천"]},
+        "조번호": {"type": ["string", "null"]},
+        "조표제": {"type": ["string", "null"]},
+        "블록": {"type": ["string", "null"]},
+        "행": {
+          "type": ["array", "null"], "minItems": 2, "maxItems": 2,
+          "items": {"type": "integer", "minimum": 1},
+          "$comment": "건축부문_수합.json 정본 md 의 물리 줄번호 [시작, 끝]"
+        },
+        "슬롯": {"type": ["string", "null"]},
+        "원본파일": {
+          "type": ["string", "null"],
+          "$comment": "md 병합 경계 주석으로 판정한 조문 시작행의 원본 파일명. 단일 파일 문서나 경계 주석이 없으면 null"
+        },
+        "마커유형": {"type": "string", "enum": ["표", "별표"]},
+        "정규화라벨": {
+          "type": "string", "minLength": 1,
+          "$comment": "사유=표기해석불가 인 격리 레코드만 숫자 없는 라벨(예: '표')을 가질 수 있다. 그 밖은 verify_contract.py 가 숫자 포함을 검사한다"
+        },
+        "원문마커": {
+          "type": "array", "minItems": 1, "items": {"type": "string", "minLength": 2},
+          "$comment": "같은 조문·같은 정규화라벨 안에서 관측된 원문 표기 전부. 정렬돼 있다"
+        },
+        "언급횟수": {"type": "integer", "minimum": 1},
+        "표ID": true,
+        "매칭방법": true,
+        "매칭근거": true,
+        "사유": true,
+        "근거": true,
+        "원본파일_추정": true,
+        "후보": true
+      }
+    },
+    "해소": {
+      "allOf": [
+        {"$ref": "#/definitions/공통"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["지구번호", "지구명", "지역", "조번호", "조표제", "블록", "행",
+                       "슬롯", "원본파일", "마커유형", "정규화라벨", "원문마커",
+                       "언급횟수", "표ID", "매칭방법", "매칭근거"],
+          "properties": {
+            "지구번호": true, "지구명": true, "지역": true, "조번호": true,
+            "조표제": true, "블록": true, "행": true, "슬롯": true, "원본파일": true,
+            "마커유형": true, "정규화라벨": true, "원문마커": true, "언급횟수": true,
+            "표ID": {
+              "type": "string",
+              "pattern": "^[0-9]{5}[A-Z]{2}[0-9]{7}-\\d+-\\d+-\\d+$",
+              "$comment": "output/legal/table/tables.csv 의 표ID. {지구번호}-{문서순번}-{쪽}-{표순번}"
+            },
+            "매칭방법": {"type": "string", "enum": ["직접일치", "분책좁힘"]},
+            "매칭근거": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["캡션원문", "출처문서"],
+              "properties": {
+                "캡션원문": {"type": "string"},
+                "출처문서": {"type": "string"},
+                "원본파일_추정": {"type": "string"},
+                "전체후보수": {"type": "integer", "minimum": 2}
+              }
+            }
+          }
+        }
+      ]
+    },
+    "격리": {
+      "allOf": [
+        {"$ref": "#/definitions/공통"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["지구번호", "지구명", "지역", "조번호", "조표제", "블록", "행",
+                       "슬롯", "원본파일", "마커유형", "정규화라벨", "원문마커",
+                       "언급횟수", "사유", "근거"],
+          "properties": {
+            "지구번호": true, "지구명": true, "지역": true, "조번호": true,
+            "조표제": true, "블록": true, "행": true, "슬롯": true, "원본파일": true,
+            "마커유형": true, "정규화라벨": true, "원문마커": true, "언급횟수": true,
+            "사유": {
+              "type": "string",
+              "enum": ["표기해석불가", "외부법령별표참조", "외부법령별표참조추정",
+                       "대상없음", "후보다중"]
+            },
+            "근거": {"type": "string", "minLength": 1},
+            "원본파일_추정": {"type": "string"},
+            "후보": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["표ID", "캡션원문", "출처문서"],
+                "properties": {
+                  "표ID": {"type": "string",
+                          "pattern": "^[0-9]{5}[A-Z]{2}[0-9]{7}-\\d+-\\d+-\\d+$"},
+                  "캡션원문": {"type": "string"},
+                  "출처문서": {"type": "string"}
+                }
+              },
+              "$comment": "사유=후보다중 일 때만 있다. 2개 이상이며 확정하지 않고 후보 전체를 남긴다"
+            }
+          }
+        }
+      ]
+    },
+    "table_refs": {
+      "type": "object",
+      "required": ["meta", "간선"],
+      "additionalProperties": false,
+      "properties": {
+        "meta": {
+          "type": "object",
+          "required": ["설명", "스크립트", "입력", "정규화규칙", "분책좁힘규칙",
+                       "외부법령별표판정", "모수", "해소방법별", "분책여부별_건수", "사각지대"],
+          "additionalProperties": false,
+          "properties": {
+            "설명": {"type": "string"},
+            "스크립트": {"type": "string"},
+            "입력": {"type": "array", "items": {"type": "string"}},
+            "정규화규칙": {"type": "string"},
+            "분책좁힘규칙": {"type": "string"},
+            "외부법령별표판정": {"type": "string"},
+            "모수": {
+              "type": "object",
+              "required": ["표참조_플래그_조문수", "추출마커_원발생수",
+                           "조문단위_유니크마커간선후보수", "해소", "격리"],
+              "additionalProperties": false,
+              "properties": {
+                "표참조_플래그_조문수": {"type": "integer", "minimum": 0},
+                "추출마커_원발생수": {"type": "integer", "minimum": 0},
+                "조문단위_유니크마커간선후보수": {"type": "integer", "minimum": 0},
+                "해소": {"type": "integer", "minimum": 0},
+                "격리": {"type": "integer", "minimum": 0}
+              }
+            },
+            "해소방법별": {"$ref": "#/definitions/해소방법분포"},
+            "분책여부별_건수": {"$ref": "#/definitions/분책분포"},
+            "사각지대": {"type": "array", "items": {"type": "string"}}
+          }
+        },
+        "간선": {"type": "array", "items": {"$ref": "#/definitions/해소"}}
+      }
+    },
+    "table_refs_report": {
+      "type": "object",
+      "required": ["meta", "격리", "격리_사유별_집계"],
+      "additionalProperties": false,
+      "properties": {
+        "meta": {
+          "type": "object",
+          "required": ["설명", "모수", "해소방법별", "분책여부별_건수", "사각지대"],
+          "additionalProperties": false,
+          "properties": {
+            "설명": {"type": "string"},
+            "모수": {"$ref": "#/definitions/표참조모수"},
+            "해소방법별": {"$ref": "#/definitions/해소방법분포"},
+            "분책여부별_건수": {"$ref": "#/definitions/분책분포"},
+            "사각지대": {"type": "array", "items": {"type": "string"}}
+          }
+        },
+        "격리": {"type": "array", "items": {"$ref": "#/definitions/격리"}},
+        "격리_사유별_집계": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "표기해석불가": {"type": "integer", "minimum": 0},
+            "외부법령별표참조": {"type": "integer", "minimum": 0},
+            "외부법령별표참조추정": {"type": "integer", "minimum": 0},
+            "대상없음": {"type": "integer", "minimum": 0},
+            "후보다중": {"type": "integer", "minimum": 0}
+          }
+        }
+      }
+    },
+    "표참조모수": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "표참조_플래그_조문수": {"type": "integer", "minimum": 0},
+        "추출마커_원발생수": {"type": "integer", "minimum": 0},
+        "조문단위_유니크마커간선후보수": {"type": "integer", "minimum": 0},
+        "해소": {"type": "integer", "minimum": 0},
+        "격리": {"type": "integer", "minimum": 0}
+      }
+    },
+    "해소방법분포": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "해소_직접일치": {"type": "integer", "minimum": 0},
+        "해소_분책좁힘": {"type": "integer", "minimum": 0},
+        "표기해석불가": {"type": "integer", "minimum": 0},
+        "외부법령별표참조": {"type": "integer", "minimum": 0},
+        "외부법령별표참조추정": {"type": "integer", "minimum": 0},
+        "대상없음": {"type": "integer", "minimum": 0},
+        "후보다중": {"type": "integer", "minimum": 0}
+      }
+    },
+    "분책분포": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "해소_분책": {"type": "integer", "minimum": 0},
+        "해소_비분책": {"type": "integer", "minimum": 0},
+        "격리_분책": {"type": "integer", "minimum": 0},
+        "격리_비분책": {"type": "integer", "minimum": 0},
+        "분책판정불가": {"type": "integer", "minimum": 0}
+      }
+    }
+  }
+}

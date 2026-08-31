@@ -1,0 +1,4 @@
+interface:
+  display_name: "Legal Table CSV"
+  short_description: "Extract and validate legal table CSVs"
+  default_prompt: "Use $legal-tablecsv to validate the two-layer legal table CSV pipeline."

@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "contract-verify/report.schema.json",
+  "title": "계약 검증 리포트",
+  "description": "run_verifiers.py 가 내는 집계 리포트. 판정은 통과·실패·미검사 세 갈래이며 미검사는 실패가 아니다.",
+  "type": "object",
+  "required": ["meta", "summary", "results"],
+  "additionalProperties": false,
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": ["생성시각", "저장소루트", "레지스트리", "인터프리터", "등록수", "선택스킬", "미등록검증기", "명시적제외검증기"],
+      "additionalProperties": false,
+      "properties": {
+        "생성시각": {
+          "type": "string",
+          "description": "ISO 8601 지역시각. 리포트 자체는 이 필드 때문에 멱등이 아니다"
+        },
+        "저장소루트": {"type": "string", "minLength": 1},
+        "레지스트리": {
+          "type": "string",
+          "description": "판정에 쓴 verifier_registry.json 의 저장소 상대 경로"
+        },
+        "인터프리터": {
+          "type": "string",
+          "description": "검증기를 띄운 python 실행 파일. 모듈 선행조건은 이 인터프리터 기준으로 판정한다"
+        },
+        "등록수": {"type": "integer", "minimum": 0},
+        "선택스킬": {
+          "type": ["array", "null"],
+          "items": {"type": "string"},
+          "uniqueItems": true,
+          "description": "--skill 로 좁힌 경우 그 목록. 전부 실행했으면 null"
+        },
+        "미등록검증기": {
+          "type": "array",
+          "items": {"type": "string"},
+          "uniqueItems": true,
+          "description": "디스크에는 있으나 레지스트리에 없는 검증기. 실패가 아니라 등록부가 낡았다는 표시다"
+        },
+        "명시적제외검증기": {
+          "type": "array",
+          "uniqueItems": true,
+          "description": "검증기 이름을 가졌지만 공통 실행에서 제외한 파일과 제외 사유",
+          "items": {
+            "type": "object",
+            "required": ["script", "reason"],
+            "additionalProperties": false,
+            "properties": {
+              "script": {"type": "string", "minLength": 1},
+              "reason": {"type": "string", "minLength": 1}
+            }
+          }
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["대상", "통과", "실패", "미검사"],
+      "additionalProperties": false,
+      "properties": {
+        "대상": {"type": "integer", "minimum": 0},
+        "통과": {"type": "integer", "minimum": 0},
+        "실패": {"type": "integer", "minimum": 0},
+        "미검사": {"type": "integer", "minimum": 0},
+        "$comment": {"type": "string"}
+      }
+    },
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "team", "skill", "kind", "order", "판정", "종료코드", "미검사사유", "명령", "소요초", "첫오류줄", "stdout요약", "stderr요약"],
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": {"판정": {"const": "미검사"}},
+              "required": ["판정"]
+            },
+            "then": {
+              "properties": {"미검사사유": {"type": "string", "minLength": 1}}
+            }
+          }
+        ],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "team": {"type": "string", "minLength": 1},
+          "skill": {"type": "string", "minLength": 1},
+          "kind": {
+            "type": "string",
+            "enum": ["계약 검증", "품질 검증", "검사기 검증", "선행조건 게이트"],
+            "description": "검증 항목의 성격. 품질 검증과 게이트도 완료 판정에 포함한다"
+          },
+          "order": {"type": "number", "minimum": 1},
+          "판정": {"type": "string", "enum": ["통과", "실패", "미검사"]},
+          "종료코드": {
+            "type": ["integer", "null"],
+            "description": "실행하지 않은 미검사는 null 이다"
+          },
+          "미검사사유": {
+            "type": ["string", "null"],
+            "description": "선행조건 미충족 내역 또는 종료코드 2. 판정이 미검사면 반드시 채운다"
+          },
+          "명령": {"type": "array", "items": {"type": "string", "minLength": 1}},
+          "소요초": {"type": ["number", "null"], "minimum": 0},
+          "첫오류줄": {
+            "type": ["string", "null"],
+            "maxLength": 300,
+            "description": "stdout·stderr 에서 처음 나온 실패 표지 줄. 원문 그대로 담는다"
+          },
+          "stdout요약": {"type": "array", "items": {"type": "string", "maxLength": 300}},
+          "stderr요약": {"type": "array", "items": {"type": "string", "maxLength": 300}}
+        }
+      }
+    }
+  }
+}

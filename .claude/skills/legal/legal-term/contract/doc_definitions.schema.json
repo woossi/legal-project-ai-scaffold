@@ -1,0 +1,132 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "doc_definitions.json — 문서 단위 정의 레코드",
+  "type": "object",
+  "required": ["meta", "records"],
+  "additionalProperties": false,
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": [
+        "생성근거",
+        "원본_생성일시",
+        "대상문서수",
+        "정의조항_보유문서수",
+        "레코드수",
+        "용어수",
+        "정의문수",
+        "중복병합",
+        "class규칙",
+        "요약규칙",
+        "요약상태분포",
+        "요약상태_의미",
+        "원본문서_주의",
+        "정렬",
+        "스크립트"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "생성근거": { "type": "string" },
+        "원본_생성일시": { "type": "string" },
+        "대상문서수": { "type": "integer", "minimum": 1 },
+        "정의조항_보유문서수": { "type": "integer", "minimum": 1 },
+        "레코드수": { "type": "integer", "minimum": 1 },
+        "용어수": { "type": "integer", "minimum": 1 },
+        "정의문수": { "type": "integer", "minimum": 1 },
+        "중복병합": {
+          "type": "object",
+          "required": ["설명", "병합전_occurrence수", "병합후_레코드수"],
+          "additionalProperties": false,
+          "properties": {
+            "설명": { "type": "string" },
+            "병합전_occurrence수": { "type": "integer", "minimum": 1 },
+            "병합후_레코드수": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "class규칙": { "type": "string" },
+        "요약규칙": {
+          "type": "object",
+          "required": ["대상", "head절단", "tail절단", "보존", "실패시"],
+          "additionalProperties": false,
+          "properties": {
+            "대상": { "type": "string" },
+            "head절단": { "type": "string" },
+            "tail절단": { "type": "string" },
+            "보존": { "type": "string" },
+            "실패시": { "type": "string" }
+          }
+        },
+        "요약상태분포": {
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 1 }
+        },
+        "요약상태_의미": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "술어일치": { "type": "string" },
+            "중간술어": { "type": "string" },
+            "술어절단복원": { "type": "string" },
+            "술어없음": { "type": "string" },
+            "요약실패": { "type": "string" }
+          }
+        },
+        "원본문서_주의": { "type": "string" },
+        "정렬": { "type": "string" },
+        "스크립트": { "type": "string" }
+      }
+    },
+    "records": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "term",
+          "term_id",
+          "term_surface",
+          "class",
+          "definition",
+          "definition_status",
+          "definition_source_text",
+          "source_file",
+          "dstrcNm",
+          "dstrcAppnNo",
+          "region",
+          "articles",
+          "match_mode",
+          "variant_index",
+          "truncated",
+          "source_quality",
+          "occurrence_count"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "term": { "type": "string", "minLength": 1 },
+          "term_id": { "type": "string", "pattern": "^T[0-9]{4,}$" },
+          "term_surface": { "type": "string", "minLength": 1 },
+          "class": { "const": "법률 용어" },
+          "definition": { "type": "string", "minLength": 1 },
+          "definition_status": {
+            "enum": ["술어일치", "중간술어", "술어절단복원", "술어없음", "요약실패"]
+          },
+          "definition_source_text": { "type": "string", "minLength": 1 },
+          "source_file": { "type": "string", "pattern": "^output/legal/markdown/" },
+          "dstrcNm": { "type": "string", "minLength": 1 },
+          "dstrcAppnNo": { "type": "string", "pattern": "^[0-9]{5}[A-Z]{2}[0-9]{7}$" },
+          "region": { "enum": ["서울", "인천", "경기"] },
+          "articles": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "match_mode": { "type": "string", "minLength": 1 },
+          "variant_index": { "type": "integer", "minimum": 0 },
+          "truncated": { "type": "boolean" },
+          "source_quality": { "type": "string" },
+          "occurrence_count": { "type": "integer", "minimum": 1 }
+        }
+      }
+    }
+  }
+}

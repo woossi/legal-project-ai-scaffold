@@ -1,0 +1,294 @@
+{
+  "$comment": "output/kb/ 온톨로지의 계약. IRI 패턴은 scripts/mint_iri.py 가 구현하고 ontology/keys.ttl 이 선언한다. 셋이 일치하는지는 게이트 6이 검사한다.",
+  "outBase": "output/kb",
+  "namespaces": {
+    "lp": "https://w3id.org/lp/ont#",
+    "lpd": "https://w3id.org/lp/id/",
+    "lpc": "https://w3id.org/lp/concept/",
+    "geo": "http://www.opengis.net/ont/geosparql#",
+    "time": "http://www.w3.org/2006/time#",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "prov": "http://www.w3.org/ns/prov#",
+    "sh": "http://www.w3.org/ns/shacl#"
+  },
+  "iriPatterns": {
+    "district": "^https://w3id\\.org/lp/id/district/[0-9]{5}[A-Z]{2}[0-9]{7}$",
+    "guideline": "^https://w3id\\.org/lp/id/guideline/[0-9]{5}[A-Z]{2}[0-9]{7}$",
+    "term": "^https://w3id\\.org/lp/id/term/T[0-9]{4,}$",
+    "occurrence": "^https://w3id\\.org/lp/id/occ/T[0-9]{4,}-[0-9]{4}$",
+    "gov": "^https://w3id\\.org/lp/id/gov/[0-9]{5}$",
+    "statute": "^https://w3id\\.org/lp/id/statute/[^/]+$",
+    "statuteArticle": "^https://w3id\\.org/lp/id/statute/[^/]+/[^/@]+$",
+    "articleVersion": "^https://w3id\\.org/lp/id/statute/[^/]+/[^/@]+@[0-9]{8}$",
+    "ordinance": "^https://w3id\\.org/lp/id/ordinance/[0-9]{5}/[^/]+$",
+    "guidelineArticle": "^https://w3id\\.org/lp/id/guidelineArticle/[0-9]{5}[A-Z]{2}[0-9]{7}/[^/]+-[0-9]{2}$",
+    "termDef": "^https://w3id\\.org/lp/id/termDef/[0-9]{5}[A-Z]{2}[0-9]{7}/T[0-9]{4,}-[0-9]{2}$",
+    "application": "^https://w3id\\.org/lp/id/application/[0-9]{5}[A-Z]{2}[0-9]{7}/[^/]+/[^/@]+$",
+    "plan": "^https://w3id\\.org/lp/id/plan/[0-9]{5}[A-Z]{2}[0-9]{7}$",
+    "planState": "^https://w3id\\.org/lp/id/planState/[0-9]{5}[A-Z]{2}[0-9]{7}@[0-9]{8}$",
+    "planEvent": "^https://w3id\\.org/lp/id/planEvent/[0-9]{5}[A-Z]{2}[0-9]{7}/[0-9]{8}$",
+    "planDoc": "^https://w3id\\.org/lp/id/planDoc/[0-9]{5}[A-Z]{2}[0-9]{7}/[^/]+$",
+    "planRule": "^https://w3id\\.org/lp/id/planRule/[0-9]{5}[A-Z]{2}[0-9]{7}/[^/]+/[^/]+/[^/]+-[0-9]{2,3}$",
+    "adminRuleClause": "^https://w3id\\.org/lp/id/adminRuleClause/[^/]+/[0-9]+(-[0-9]+){1,3}$",
+    "evidence": "^https://w3id\\.org/lp/id/evidence/[0-9a-f]{64}$"
+  },
+  "graphLayers": {
+    "det": {
+      "dir": "graph/det",
+      "dataGlobs": [
+        "graph/det/*.ttl",
+        "norm/graph/det/*.ttl",
+        "norm/graph/det/norm-value/*.ttl"
+      ],
+      "reasoning": "allowed",
+      "note": "근거 사슬이 이어지는 진술만. OWL 추론 대상. 세 글롭의 합집합이 게이트 2 det 입력과 게이트 3 det SHACL 데이터 입력이다"
+    },
+    "prob": {
+      "dir": "graph/prob",
+      "dataGlobs": [
+        "graph/prob/*.ttl"
+      ],
+      "reasoning": "forbidden",
+      "note": "판정·분류·빈도. 추론에 넣으면 오판정이 사실로 굳는다. 이 글롭이 게이트 2 prob 입력과 게이트 4 prob SHACL 데이터 입력이다"
+    }
+  },
+  "probOnlyPredicates": [
+    "lp:confidence",
+    "lp:conceptType",
+    "lp:definitionVariance",
+    "lp:docFrequency",
+    "lp:districtRatio"
+  ],
+  "detOnlyPredicates": [
+    "lp:mandates",
+    "lp:delegates",
+    "lp:authorizes",
+    "lp:defines",
+    "lp:appliedNorm",
+    "lp:hasState",
+    "lp:stateOf",
+    "lp:hasRule",
+    "lp:expressedBy",
+    "lp:effectiveDuring",
+    "lp:establishedBy",
+    "lp:initiates",
+    "lp:terminates",
+    "lp:versionOf",
+    "lp:시행일",
+    "lp:실효일",
+    "lp:asOfYear",
+    "lp:asOfDate",
+    "lp:temporalBasis",
+    "lp:temporalPrecision",
+    "lp:observationYear",
+    "lp:observationDate",
+    "lp:observationBasis",
+    "lp:observationPrecision",
+    "lp:applicableVersionUnresolved",
+    "lp:상위지자체",
+    "lp:지정근거법",
+    "lp:적용조례",
+    "lp:조례위임",
+    "lp:inGuideline",
+    "lp:inArticle",
+    "lp:definitionText",
+    "lp:articleOrigin",
+    "lp:articleSeq",
+    "lp:사례지구",
+    "lp:지구수",
+    "lp:정의진술수",
+    "lp:문언종수",
+    "lp:적용대상원문",
+    "lp:적용대상유형",
+    "lp:한도구분",
+    "lp:규정값",
+    "lp:단서원문",
+    "lp:근거문서",
+    "lp:표ID",
+    "lp:추출경로",
+    "lp:품질등급",
+    "lp:값",
+    "lp:값타입",
+    "lp:주어키",
+    "lp:주어원문",
+    "lp:값기준",
+    "lp:추출근거항키",
+    "lp:구간하한",
+    "lp:구간상한",
+    "lp:구간대상",
+    "lp:관계",
+    "lp:근거항번호",
+    "lp:근거호번호",
+    "lp:세분주어",
+    "lp:inAdminRule",
+    "lp:계획항목",
+    "lp:항번호",
+    "lp:hasEvidenceRecord",
+    "lp:evidenceKind",
+    "lp:evidenceSource",
+    "lp:evidenceLocator"
+  ],
+  "evidenceRecord": {
+    "class": "lp:EvidenceRecord",
+    "iriPattern": "evidence",
+    "kindDomain": ["text", "table", "officialDocument"],
+    "requiredProperties": ["lp:evidenceKind", "lp:evidenceSource", "lp:evidenceLocator"],
+    "statusDomains": {
+      "lp:shapeValidationStatus": ["not_run", "pass", "fail", "skipped"],
+      "lp:legalReviewStatus": ["not_reviewed", "needs_evidence", "aligned", "misaligned", "out_of_scope"]
+    },
+    "legacyEvidenceRule": "lp:evidence는 LawApplication에서 Occurrence 또는 PlanningRule을 가리키는 기존 경로로 유지한다. EvidenceRecord에는 hasEvidenceRecord를 쓴다.",
+    "reverseMinting": {
+      "$comment": "build_evidence.py는 기존 PlanningRule과 AdminRuleClause에서 근거 레코드를 독립 발급한다. 기존 plan-rule.ttl과 plan-item.ttl은 수정하지 않는다.",
+      "sortKey": ["target_iri", "kind", "source_iri", "locator"],
+      "table": {
+        "targetClass": "lp:PlanningRule",
+        "requires": ["lp:sourceText", "lp:근거문서", "lp:표ID"],
+        "source": "lp:근거문서 IRI",
+        "locator": "표ID=<lp:표ID>"
+      },
+      "text": {
+        "targetClass": "lp:AdminRuleClause",
+        "requires": ["lp:sourceText", "lp:inAdminRule", "lp:항번호"],
+        "source": "lp:inAdminRule IRI",
+        "locator": "항번호=<lp:항번호>"
+      },
+      "officialDocument": {
+        "planningRuleGate": "tables.csv 출처문서 basename과 같은 지구 meta.json downloaded[].originalName 또는 savedAs가 정확히 일치해야 한다.",
+        "adminRuleSource": "http://law.go.kr/flDownload.do?flSeq=140733953",
+        "partialMatch": "금지"
+      },
+      "outputs": ["output/kb/graph/det/evidence.ttl", "output/kb/reports/_evidence.json"]
+    }
+  },
+  "applicationIriRule": "적용 사례 IRI 에 판본(@시행일)을 넣지 않는다. 다만 실제 고시일·인용일·문서작성일과 ArticleVersion이 함께 확인되지 않으면 적용 사례 자체를 발급하지 않는다",
+  "temporalSeparationRule": "District의 observation*은 품질 관측값이다. 지구번호연도_proxy를 LawApplication의 asOf*·temporalBasis로 복사하지 않는다",
+  "planMinting": {
+    "$comment": "core.ttl 지구단위계획 절(lp:DistrictUnitPlan 계통)의 발급 근거 요건. 요건 미달은 인스턴스가 아니라 output/kb/reports/ 격리다. 인스턴스 0건인 동안 요건 검사는 미검사(skipped)다.",
+    "plan": {
+      "class": "lp:DistrictUnitPlan",
+      "requires": [
+        "output/legal/시행지침/meta.json districts[].dstrcAppnNo",
+        "hasState ≥1 — planState 개통 선행",
+        "establishedBy ≥1 — planEvent 고시일 확정 선행"
+      ],
+      "note": "지구번호는 발급 키(proxy)다. lp:District 와의 개체 동일성 주장이 아니다 — 식별 기준이 다르다"
+    },
+    "planState": {
+      "class": "lp:PlanState",
+      "requires": [
+        "상태를 시작시킨 고시일",
+        "lp:expressedBy 대상 문서 1건 이상",
+        "lp:hasRule 대상 계획규정 1건 이상 — planningRule 개통(2026-08-19 설계), csv 행 존재"
+      ],
+      "note": "지구번호연도_proxy 로 발급하지 않는다 — 관측값을 확정값으로 승격하지 않는다. 현재 고시일 관측 3/190(boundary.ttl)"
+    },
+    "planEvent": {
+      "classes": ["lp:PlanEstablishmentEvent", "lp:PlanChangeEvent"],
+      "requires": ["결정·변경 고시일", "initiates 대상 planState 발급 가능 선행"],
+      "note": "성립·변경 구분은 rdf:type 이 담당한다. IRI 는 지구번호와 고시일만 갖는다"
+    },
+    "planDoc": {
+      "class": "lp:PlanningDocument",
+      "requires": ["output/legal/시행지침/meta.json districts[].attachments[] 실측 항목"],
+      "kindSegment": "attachments[].label 을 normalize_article_title 로 정규화한 조각. 원문 라벨은 rdfs:label 로 남긴다",
+      "kindDomain": ["위치도", "광역교통계획도", "토지이용계획도", "지구단위계획도 (가구 및 획지경계도)"],
+      "kindDomainNote": "190지구 attachments 전수 실측(2026-08-03 수집분: 위치도 186 · 광역교통계획도 133 · 토지이용계획도 187 · 지구단위계획도 182). 새 라벨이 나오면 이 계약을 먼저 갱신한다",
+      "observedNotCollected": {
+        "고시문": "dstrcDetailInfo.do(dstrcHistNo) 응답에만 있다 — 수집 정본 편입 전에는 발급하지 않는다(_decision_map_survey.json 2026-08-14 정정)"
+      },
+      "excluded": {
+        "지구단위계획시행지침": "기존 guideline IRI 를 쓴다 — 같은 문서에 IRI 를 두 번 발급하지 않는다"
+      }
+    },
+    "planningRule": {
+      "class": "lp:PlanningRule",
+      "iriPattern": "planRule",
+      "requires": [
+        "output/legal/table/norm_건축계획지표.csv 행 — 지구번호·주체·지표명·값_원문 필수",
+        "guideline/{지구번호} 문서 노드 — lp:근거문서 앵커"
+      ],
+      "coverageAuthority": "legal-tablecsv contract/outputs.json 원본보유모수 — 분모를 여기 복제하지 않는다",
+      "valueDomainAuthority": ".claude/skills/legal/legal-tablecsv/contract/outputs.json 의 값도메인(주체유형·지표명·한도구분·단위·추출경로·품질등급) — 이 도메인은 PlanningRule 입력에 한해 정본이다. 지표명 6종은 lp:RegulationIndex 인스턴스 집합의 부분집합이어야 한다. kb-axis-value의 조례 규범축은 axis_spec.json의 규범축IRI가 별도 정본이므로 legal-tablecsv 지표명 도메인에 넣지 않는다. kb 사본(grounding.ttl·det.shacl.ttl 의 sh:in, verify_chain.py 의 TYPES·LIMITS)을 갱신할 때 이 파일을 재확인한다",
+      "note": "값_수치 공란 행도 발급한다 — lp:규정값 만 없고 lp:sourceText 는 있다. 파싱실패사유는 reports/_plan_rule.json"
+    },
+    "planRuleReport": {
+      "$comment": "output/kb/reports/_plan_rule.json 의 구조 계약. 하우스 관례(output/kb/norm/reports/_delegation.json · _norm_value.json)를 따라 최상위 키 격리 하나에 두 계열을 사유 필드로 구분해 담는다 — rows/계열/행격리 구조는 폐기(2026-08-19 최종 리뷰에서 관례 불일치 발견).",
+      "path": "output/kb/reports/_plan_rule.json",
+      "topKey": "격리",
+      "entrySchema": {"사유": "격리사유 중 하나", "대상": "지구번호/주체/지표명 등 대상 식별", "설명": "구체 사유 원문"},
+      "격리사유": {
+        "행격리": "csv 행 자체가 rule 로 발급되지 못했다 — requires 필수 필드 결측 등. 게이트 14 ①의 집계식(csv 행수 = rule 수 + 이 사유 건수)은 이 사유만 센다",
+        "파싱실패사유": "rule 은 발급됐으나 값_수치가 공란이다 — lp:규정값 없이 lp:sourceText 만 있다",
+        "시점근거_미확보": "rule 은 발급됐으나 LawApplication 으로 이어지지 못했다 — 시점 근거(고시일·인용일·문서작성일) 미확보",
+        "적용판본_미보유": "시점 근거는 있으나 그 시점의 조례 판본이 corpus 에 없다(현행뿐)",
+        "용도지역_매핑_미발급": "rule 은 발급됐으나 lp:적용용도지역 간선이 없다 — planningRuleZoneEdge 요건(mapping_issued) 미달"
+      },
+      "gate14CountsOnly": "행격리 — 나머지 4종은 발급 rule 의 결손·미성립 기록이지 행 격리가 아니므로 게이트 14 ①의 등식에서 뺀다"
+    },
+    "planningRuleZoneEdge": {
+      "predicate": "lp:적용용도지역",
+      "requires": [
+        "lot-zone 산출물 mapping_issued=true — 스위치 정본은 output/legal/lot-zone-audit/용지블록_용도지역_매핑가능성_조사.json",
+        "해당 지구·획지 코드의 법적 매핑 항목"
+      ],
+      "$comment": "2026-08-19 관측: mapping_issued=false — 발급 가능 0/190, 기술 준비 1/190(시흥정왕 G1·G2 passed). 유보 사유: SR-1 도면정합성 도메인판정 미완, 페인터 우선순위 상수의 지구별 렌더 재검증 필수",
+      "격리": "요건 미달 rule 은 간선 없이 발급하고 reports/_plan_rule.json 에 사유 용도지역_매핑_미발급 으로 기록 — rule 자체는 유효하다"
+    }
+  },
+  "planItemAxis": {
+    "$comment": ".claude/rules/계획규범요소-틀.md 의 L1(계획항목) 축. 그 틀의 온톨로지 대응표가 L1 을 '계획항목 SKOS 축 + 수립지침 항 노드'로 정하고 미구현으로 표시한 자리다. 절은 어휘(SKOS Concept), 항은 결정론 그래프 노드로 나눠 싣는다.",
+    "source": "output/legal/statute/수립지침_항구조.json",
+    "sourceAuthority": "legal-statute — 훈령 「지구단위계획수립지침」(admrul:2100000241690, 2024-05-29 시행) 전문 파싱. 장·절·항 모수를 여기 복제하지 않는다",
+    "vocab": {
+      "path": "output/kb/ontology/vocab-plan-item.ttl",
+      "builder": ".claude/skills/kb/kb-ontology/scripts/build_plan_item.py",
+      "scheme": "https://w3id.org/lp/concept/계획항목",
+      "conceptIriPattern": "^https://w3id\\.org/lp/concept/계획항목/[0-9]+-[0-9]+$",
+      "collectionIriPattern": "^https://w3id\\.org/lp/concept/계획항목/제[0-9]+장$",
+      "conceptScope": [3, 4],
+      "conceptScopeNote": "제3장 공통 수립기준의 절 19개 + 제4장 주거형의 절 7개 = 26. 택지개발지구가 주거형이므로 유형별 장(제4~8장) 중 제4장만 연다. 제5~8장은 대상 지구가 확정되기 전에는 발급하지 않는다 — 수립지침이 유형별로 분기하는 구조가 근거다",
+      "conceptCount": 26,
+      "iriNote": "SKOS 어휘는 OWL 클래스가 아니다. Concept·Collection IRI 는 keys.ttl 의 발급 패턴 대상이 아니며(vocab-concept.ttl 선례) 이 계약이 유일한 패턴 정본이다. 장은 Concept 이 아니라 skos:Collection 이므로 개념 수에 세지 않는다",
+      "prefLabelRule": "절제목 원문 그대로. 요약하거나 다듬지 않는다 — 원문 표기(제N절 …)는 lp:sourceText 에 따로 남긴다",
+      "notationRule": "절키 {장번호}-{절번호}. 항번호 앞 두 자리와 같은 표기다"
+    },
+    "clause": {
+      "class": "lp:AdminRuleClause",
+      "iriPattern": "adminRuleClause",
+      "graph": "graph/det/plan-item.ttl",
+      "requires": [
+        "수립지침_항구조.json 항목록[].본문 — lp:sourceText 원문",
+        "장번호 ∈ vocab.conceptScope 이고 절번호가 있어 계획항목 Concept 에 소속된다 — lp:계획항목",
+        "훈령 법원 노드 statute/{meta.생성근거.official_name} — lp:inAdminRule 앵커"
+      ],
+      "classNote": "항은 조문이 아니다. lp:ArticleWork 로 타이핑하지 않는다 — 조문형이 아니라 위임 사슬(게이트 8)의 뿌리 도달 대상이 될 수 없고 판본(@시행일)도 갖지 않는다. lp:inSource 대신 lp:inAdminRule 을 쓰는 이유도 같다: lp:inSource 의 rdfs:domain 이 lp:ArticleWork 라 RDFS 추론이 항을 조문으로 오분류한다",
+      "levelDomain": [2, 3, 4],
+      "levelNote": "항번호 레벨 2~4. 2단(x-y)은 절 없는 장에서만 관측되므로 conceptScope 안에서는 3·4단만 나온다. 4단 항의 번호접두 상위항은 표기상의 관계이며 법적 종속 판정이 아니므로 간선으로 만들지 않는다(원천 판정규약)",
+      "temporalRule": "meta.생성근거.application_version_unresolved=true 다. 항 노드에도 훈령 법원 노드에도 판본·시행일을 붙이지 않는다. lp:applicableVersionUnresolved 는 rdfs:domain 이 lp:District 라 여기 쓰면 훈령이 지구로 오분류된다 — 현행 정본 판본은 plan-item.ttl 머리 주석과 reports/_plan_item.json 의 원천 표기로만 남긴다"
+    },
+    "제52조매핑": {
+      "predicate": "lp:법제52조호",
+      "target": "Concept (절). 항에는 붙이지 않는다 — 호 대응은 계획항목 단위의 판단이다",
+      "evidenceDomain": ["호법문", "slot_exact", "법정구조표"],
+      "evidenceAuthority": {
+        "호법문": ".claude/skills/legal/legal-contrast/case/제52조-슬롯매핑.json 의 호[].법문에 절제목이 들어 있는 경우. 대조는 공백과 중점 변형(·․‧∙・ㆍ)만 지운 키로 한다 — 절제목은 한글 중점 'ㆍ'(U+318D)를 쓰고 법문은 가운뎃점 '·'(U+00B7)을 쓴다",
+        "slot_exact": "같은 파일 slot_exact 의 정규화 키와 절제목 정규화 키가 정확히 같은 경우",
+        "법정구조표": ".claude/rules/지구단위계획-법정구조.md '법 제52조 내용과 온톨로지 대응' 표의 법정 내용 서술과 절제목이 대응하는 경우"
+      },
+      "rule": "근거원 세 종 중 하나에 걸리는 것만 발급한다. slot_patterns 정규식은 쓰지 않는다 — 부분문자열로 표제를 호에 직결하면 오탐이 들어온다(계획규범요소-틀 규칙). 미확정은 발급하지 않고 리포트에 사유를 남긴다",
+      "mappingAuthority": "매핑 자체는 build_plan_item.py 의 상수 표가 정본이다. 26건이라 기계 판정보다 사람이 검수한 표가 더 정확하고, 표의 절키 집합이 원천 절 목록과 어긋나면 스크립트가 실패한다"
+    },
+    "report": {
+      "path": "output/kb/reports/_plan_item.json",
+      "topKey": "격리",
+      "entrySchema": {"사유": "격리사유 중 하나", "대상": "절키 또는 항번호", "설명": "구체 사유"},
+      "격리사유": {
+        "계획항목축_범위밖": "장번호가 vocab.conceptScope 밖이라 소속 Concept 이 없다 — 항 노드를 발급하지 않는다",
+        "절없음": "장에 절이 없어 계획항목 Concept 에 소속시킬 수 없다",
+        "제52조호_미확정": "절 Concept 은 발급했으나 evidenceDomain 세 근거원 어디에도 정확일치가 없어 lp:법제52조호 를 붙이지 않았다 — Concept 자체는 유효하다"
+      },
+      "countsOnly": "계획항목축_범위밖·절없음 — 이 둘만 항 발급 모수(항 전체수 = 발급 항수 + 이 두 사유 건수)에서 센다. 제52조호_미확정은 발급된 Concept 의 결손 기록이지 격리가 아니다"
+    }
+  }
+}

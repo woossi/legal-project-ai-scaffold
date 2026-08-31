@@ -1,0 +1,239 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "legal-term/terms.schema.json",
+  "title": "output/legal/word/terms.json",
+  "description": "용어집 메인. 용어 1건 = terms[] 원소. 정의문은 md 원문의 연속 부분문자열이어야 하며(공백 정규화 후) 재작성·윤문은 계약 위반이다.",
+  "type": "object",
+  "required": ["meta", "terms"],
+  "additionalProperties": false,
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": ["생성일시", "대상문서수", "정의문_추출성공_문서수", "추출용어수_고유", "추출정의문수_총"],
+      "additionalProperties": false,
+      "properties": {
+        "생성일시": { "type": "string" },
+        "대상문서수": { "type": "integer", "minimum": 0 },
+        "정의문_추출성공_문서수": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "district_ratio_adj 의 분모. 대상문서수 이하여야 한다"
+        },
+        "추출용어수_고유": { "type": "integer", "minimum": 0 },
+        "추출정의문수_총": { "type": "integer", "minimum": 0 },
+        "지역별문서수": {
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 0 }
+        },
+        "원본경로": { "type": "string" },
+        "스크립트경로": { "type": "string" },
+        "추출방법": { "type": "string" },
+        "매칭모드": { "type": "array", "items": { "type": "string" } },
+        "정의문_저장시_변형규칙": { "type": "array", "items": { "type": "string" } },
+        "인용부호_처리": { "type": "string" },
+        "primary_분류축": { "type": "string" },
+        "기준": { "type": "string" }
+      }
+    },
+    "terms": { "type": "array", "items": { "$ref": "#/$defs/term" } }
+  },
+  "$defs": {
+    "term": {
+      "type": "object",
+      "required": [
+        "id", "term", "normalized", "definition_representative",
+        "definition_variance", "variants", "classification", "cited_laws",
+        "doc_frequency", "district_ratio", "district_ratio_adj",
+        "occurrence_count", "occurrences"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^T[0-9]{4,}$" },
+        "term": { "type": "string", "minLength": 1 },
+        "normalized": { "type": "string" },
+        "surface_forms": { "type": "array", "items": { "type": "string" } },
+        "definition_representative": {
+          "type": "string",
+          "minLength": 1,
+          "description": "정의부만. 술어(말한다/말하며/…)까지. 군집화·충돌 판정의 기준"
+        },
+        "definition_representative_full": { "type": "string", "minLength": 1 },
+        "definition_rule_part": { "type": ["string", "null"], "description": "규정부. 충돌 판정에 쓰지 않는다" },
+        "definition_variance": {
+          "enum": ["일치", "표현차이", "실질충돌"],
+          "description": "유사도 기반 판정 금지 — 군집 과분할로 상위 용어가 전부 충돌로 나온다"
+        },
+        "variance_evidence": { "type": "string" },
+        "variance_diff_summary": { "type": "string" },
+        "proviso_divergence": { "type": "boolean" },
+        "ocr_suspected_typo": { "type": "array", "items": { "$ref": "#/$defs/ocr_typo" } },
+        "variants": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/variant" } },
+        "cited_laws": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "대표 정의문이 아니라 전 variant 에서 수집한다"
+        },
+        "classification": { "$ref": "#/$defs/classification" },
+        "doc_frequency": { "type": "integer", "minimum": 1 },
+        "district_ratio": { "type": "number", "minimum": 0, "maximum": 1, "description": "분모=대상문서수" },
+        "district_ratio_adj": { "type": "number", "minimum": 0, "maximum": 1, "description": "분모=정의문_추출성공_문서수. 등급 판정은 이쪽" },
+        "occurrence_count": { "type": "integer", "minimum": 1 },
+        "occurrences": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/occurrence" } }
+      }
+    },
+    "variant": {
+      "type": "object",
+      "required": ["variant_index", "text", "text_core", "districts", "count"],
+      "additionalProperties": false,
+      "properties": {
+        "variant_index": { "type": "integer", "minimum": 0 },
+        "text": { "type": "string", "minLength": 1 },
+        "text_core": { "type": "string", "description": "정의부" },
+        "text_rule": { "type": ["string", "null"] },
+        "text_surface_forms": { "type": "array", "items": { "type": "string" } },
+        "districts": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "count": { "type": "integer", "minimum": 1 },
+        "numeric_signature": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "분수·%·분의N을 값으로 환산한 서명. 부등호와 분모(기준 명사)를 보존해야 한다"
+        },
+        "truncated": { "type": "boolean" },
+        "source_quality": { "enum": ["정상변환", "OCR"] },
+        "ocr_corrected": { "type": "boolean" },
+        "ocr_original_term": { "type": ["string", "null"] }
+      }
+    },
+    "occurrence": {
+      "type": "object",
+      "required": ["dstrcNm", "dstrcAppnNo", "region", "variant_index"],
+      "additionalProperties": false,
+      "properties": {
+        "dstrcNm": { "type": "string", "minLength": 1 },
+        "dstrcAppnNo": { "type": "string", "pattern": "^[0-9]{5}[A-Z]{2}[0-9]{7}$" },
+        "region": { "enum": ["서울", "인천", "경기"] },
+        "file": { "type": "string", "minLength": 1 },
+        "lawordNm": { "type": ["string", "null"] },
+        "article": { "type": ["string", "null"], "description": "조 표제. `#### 제N조 (…)` 외 형태가 다수" },
+        "in_definition_article": { "type": "boolean" },
+        "match_mode": {
+          "enum": [
+            "인용부호+이라 함은", "인용부호+라 함은", "인용부호+이란", "인용부호+란",
+            "무인용부호+콜론", "인용부호+는", "인용부호+은", "무인용부호"
+          ],
+          "description": "실측 분포(7,326건): 이라 함은 > 라 함은 > 이란 > 란 > 콜론 > 는 > 은 > 무인용부호"
+        },
+        "term_surface": { "type": "string", "minLength": 1 },
+        "truncated": { "type": "boolean" },
+        "text_quality": { "type": "string", "description": "정상 / 의심(…) — 의심 건은 검수 대상" },
+        "source_quality": { "enum": ["정상변환", "OCR"] },
+        "ocr_corrected": { "type": "boolean" },
+        "ocr_original_term": { "type": ["string", "null"] },
+        "variant_index": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "classification": {
+      "type": "object",
+      "required": ["concept_type", "legal_status", "ubiquity", "classification_confidence"],
+      "additionalProperties": false,
+      "properties": {
+        "concept_type": { "type": "string", "minLength": 1, "description": "primary 축 (axis_B)" },
+        "concept_type_is_primary": { "type": "boolean" },
+        "source_topic": { "type": ["string", "null"] },
+        "source_article_title": { "type": ["string", "null"] },
+        "source_article_titles_observed": { "type": "array", "items": { "type": "string" } },
+        "source_topic_distribution": {
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 1 }
+        },
+        "legal_status": {
+          "enum": ["지침고유", "상위법령_인용", "혼합"],
+          "description": "지침고유는 어떤 지구에서도 법령을 인용하지 않은 경우로 한정. cited_laws 가 비지 않았는데 지침고유면 자기모순이다"
+        },
+        "legal_status_evidence": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "occurrences": { "type": "integer", "minimum": 0 },
+            "occurrences_with_cited_laws": { "type": "integer", "minimum": 0 },
+            "occurrences_deferring_to_law": { "type": "integer", "minimum": 0 },
+            "cited_law_ratio": { "type": "number", "minimum": 0, "maximum": 1 },
+            "defer_ratio": { "type": "number", "minimum": 0, "maximum": 1 },
+            "per_occurrence_distribution": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "지침고유": { "type": "integer", "minimum": 0 },
+                "상위법령_인용": { "type": "integer", "minimum": 0 },
+                "혼합": { "type": "integer", "minimum": 0 }
+              }
+            }
+          }
+        },
+        "ubiquity": {
+          "enum": ["코어", "공통", "일반", "특수"],
+          "description": "판정 모수는 district_ratio_adj (분모=정의문_추출성공_문서수)"
+        },
+        "ubiquity_by_total_docs": { "type": "string" },
+        "ubiquity_basis": { "type": "string" },
+        "classification_confidence": { "enum": ["high", "medium", "low"] }
+      }
+    },
+    "ocr_typo": {
+      "type": "object",
+      "required": ["오인식", "원문추정", "근거", "자동치환"],
+      "additionalProperties": false,
+      "properties": {
+        "오인식": { "type": "string", "minLength": 1 },
+        "원문추정": { "type": "string", "minLength": 1 },
+        "근거": { "type": "string", "minLength": 1 },
+        "자동치환": { "type": "boolean" }
+      }
+    },
+    "core_terms_document": {
+      "type": "object",
+      "required": ["meta", "terms"],
+      "additionalProperties": false,
+      "properties": {
+        "meta": { "$ref": "#/properties/meta" },
+        "terms": { "type": "array", "items": { "$ref": "#/$defs/core_term" } }
+      }
+    },
+    "core_term": {
+      "type": "object",
+      "required": [
+        "id", "term", "normalized", "definition_representative",
+        "definition_variance", "variants", "classification", "cited_laws",
+        "doc_frequency", "district_ratio", "district_ratio_adj",
+        "occurrence_count", "districts"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/term/properties/id" },
+        "term": { "$ref": "#/$defs/term/properties/term" },
+        "normalized": { "$ref": "#/$defs/term/properties/normalized" },
+        "surface_forms": { "$ref": "#/$defs/term/properties/surface_forms" },
+        "definition_representative": { "$ref": "#/$defs/term/properties/definition_representative" },
+        "definition_representative_full": { "$ref": "#/$defs/term/properties/definition_representative_full" },
+        "definition_rule_part": { "$ref": "#/$defs/term/properties/definition_rule_part" },
+        "definition_variance": { "$ref": "#/$defs/term/properties/definition_variance" },
+        "variance_evidence": { "$ref": "#/$defs/term/properties/variance_evidence" },
+        "variance_diff_summary": { "$ref": "#/$defs/term/properties/variance_diff_summary" },
+        "proviso_divergence": { "$ref": "#/$defs/term/properties/proviso_divergence" },
+        "ocr_suspected_typo": { "$ref": "#/$defs/term/properties/ocr_suspected_typo" },
+        "variants": { "$ref": "#/$defs/term/properties/variants" },
+        "cited_laws": { "$ref": "#/$defs/term/properties/cited_laws" },
+        "classification": { "$ref": "#/$defs/term/properties/classification" },
+        "doc_frequency": { "$ref": "#/$defs/term/properties/doc_frequency" },
+        "district_ratio": { "$ref": "#/$defs/term/properties/district_ratio" },
+        "district_ratio_adj": { "$ref": "#/$defs/term/properties/district_ratio_adj" },
+        "occurrence_count": { "$ref": "#/$defs/term/properties/occurrence_count" },
+        "districts": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "pattern": "^[0-9]{5}[A-Z]{2}[0-9]{7}$" }
+        }
+      }
+    }
+  }
+}

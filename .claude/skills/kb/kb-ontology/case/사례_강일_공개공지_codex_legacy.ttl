@@ -1,0 +1,72 @@
+@prefix lp:  <https://w3id.org/lp/ont#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@base <https://w3id.org/lp/id/> .
+
+##  실제 지구 하나로 조립한 인스턴스 사례. 스펙 ③이 만들 그래프의 미리보기다.
+##  지구 11740DA2010001 강일 도시개발구역 · 용어 T0020 공개공지
+##  시행일(@YYYYMMDD)은 스펙 ②가 연혁을 수집해야 채워지므로 여기서는 비운다.
+
+<district/11740DA2010001> a lp:District ;
+    lp:code "11740DA2010001" ;
+    rdfs:label "강일 도시개발구역"@ko ;
+    lp:jurisdiction <gov/11740> ;
+    lp:지정당시코드 "11740" ;
+    lp:사업기간 "2003.11.10. ∼ 2027.12.31." .
+
+<gov/11740> a lp:Jurisdiction ;
+    rdfs:label "lcCode 11740"@ko .
+
+<gov/11000> a lp:Jurisdiction ;
+    rdfs:label "서울특별시"@ko .
+
+<statute/건축법> a lp:Act ;
+    rdfs:label "건축법"@ko ;
+    rdfs:comment "위임만 담는다. 규범값 없음"@ko .
+
+<statute/건축법/제43조> a lp:ArticleWork ;
+    lp:inSource <statute/건축법> ;
+    lp:sourceText "「건축법」 제 43조" .
+
+<statute/건축법시행령> a lp:Decree ;
+    rdfs:label "건축법시행령"@ko ;
+    rdfs:comment "규범값이 여기서 시작한다"@ko .
+
+<statute/건축법시행령/제27조의2> a lp:ArticleWork ;
+    lp:inSource <statute/건축법시행령> ;
+    lp:sourceText "「건축법 시행령」 제27조의2" .
+
+<statute/서울특별시건축조례> a lp:Ordinance ;
+    rdfs:label "서울특별시건축조례"@ko ;
+    rdfs:comment "구체 한도는 지자체가 정한다"@ko .
+
+<statute/서울특별시건축조례/제26조> a lp:ArticleWork ;
+    lp:inSource <statute/서울특별시건축조례> ;
+    lp:sourceText "「서울특별시 건축조례」 제26조" .
+
+<statute/건축법/제43조> lp:delegates <statute/건축법시행령/제27조의2> .
+
+<statute/건축법시행령/제27조의2> lp:delegates <statute/서울특별시건축조례/제26조> .
+
+<term/T0020> a lp:PlanElement ;
+    lp:code "T0020" ;
+    rdfs:label "공개공지"@ko ;
+    lp:sourceText "공개공지" .
+
+<occ/T0020-0000> a lp:Occurrence ;
+    lp:ofPlanElement <term/T0020> ;
+    lp:inDistrict <district/11740DA2010001> ;
+    lp:sourceText "제5조 (용어의 정의)" .
+
+<application/11740DA2010001/건축법시행령/제27조의2> a lp:LawApplication ;
+    lp:inDistrict <district/11740DA2010001> ;
+    lp:evidence <occ/T0020-0000> ;
+    lp:asOfYear "2010"^^xsd:gYear ;
+    lp:temporalBasis "지구번호" ;
+    lp:temporalPrecision "year" ;
+    rdfs:comment "lp:appliedNorm 은 조문 판본을 가리켜야 하는데 판본은 스펙 ②의 연혁 수집이 있어야 발급된다. 그때까지 비운다."@ko .
+
+<typing/T0020> a lp:TypingAssertion ;
+    lp:ofTerm <term/T0020> ;
+    lp:conceptType lp:PublicScapeElement ;
+    lp:confidence "high" .

@@ -1,0 +1,25 @@
+# Project data and generated artifacts
+output/
+docs/ppt/
+
+# Runtime state
+.claude/agent-memory/
+.claude/worktrees/
+.worktrees/
+.codex/logs/
+.superpowers/
+.mcp.json
+.claude/settings.local.json
+
+# Environments and caches
+.venv/
+.venv_*/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.DS_Store
+
+# Local secrets
+.env
+.env.*
+!.env.example

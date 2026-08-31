@@ -1,0 +1,60 @@
+{
+ "설명": "output/legal/contrast/ 산출물 계약. 구조는 contrast.schema.json, 값 도메인과 교차 제약은 이 파일에 둔다.",
+ "산출물": [
+  {"path": "output/legal/contrast/facets.json", "생성": "scripts/build_facets.py",
+   "내용": "지구 189건의 축 정규화 값"},
+  {"path": "output/legal/contrast/pairs.json", "생성": "scripts/build_facets.py",
+   "내용": "대조쌍. 대상축 하나만 다르고 통제축은 같다"},
+  {"path": "output/legal/contrast/slots.json", "생성": "scripts/extract_norms.py → build_contrast.py",
+   "내용": "규칙 슬롯과 커버리지. build_contrast.py 가 제52조 호를 덧붙인다"},
+  {"path": "output/legal/contrast/norms.json", "생성": "scripts/extract_norms.py",
+   "내용": "규범 문장 군집. 들여쓰기 없이 저장한다"},
+  {"path": "output/legal/contrast/determinism.json", "생성": "scripts/build_contrast.py",
+   "내용": "결정론 판정. 5지구 이상 규범만 싣는다"},
+  {"path": "output/legal/contrast/variation.json", "생성": "scripts/build_contrast.py",
+   "내용": "쌍별 변이. Tier A·BASE 만 쌍별로, 나머지는 축별 집계"},
+  {"path": "output/legal/contrast/_extraction_gap.json", "생성": "scripts/build_contrast.py",
+   "내용": "법정 필수 호 미검출 지구. 규정 부재가 아니라 추출 실패로 본다"}
+ ],
+ "선행조건": [
+  "output/legal/analysis/시행지침_목차구조_전수조사.csv 가 있어야 한다 (legal-toc)",
+  "output/legal/markdown/<지역>/<지구명>.md 가 있어야 한다 (legal-textreform)",
+  "build_facets.py → extract_norms.py → build_contrast.py 순서로 실행한다",
+  "build_contrast.py 는 slots.json 을 덮어쓰므로 extract_norms.py 를 먼저 돌린다"
+ ],
+ "멱등성": "같은 입력에 대해 같은 산출물을 낸다. 군집 병합은 지구 수 내림차순·키 사전순으로 시드를 골라 순서가 고정된다",
+ "값도메인": {
+  "시기": ["P1", "P2", "P3"],
+  "광역": ["서울", "경기", "인천"],
+  "주체계열": ["공공", "민간", "불명"],
+  "주체": ["LH", "광역공사", "기초공사", "지자체", "기타공공", "조합", "신탁", "PFV", "민간법인", "불명"],
+  "근거법령": ["공공주택 특별법", "도시개발법", "택지개발촉진법", "민간임대주택법",
+            "경제자유구역법", "산단절차간소화법", "산업입지법"],
+  "면적구간": ["S(<10만㎡)", "M(10~50만㎡)", "L(50~200만㎡)", "XL(200만㎡~)", "미상"]
+ },
+ "판정파라미터": {
+  "MIN_PAIRS": 10,
+  "MIN_DISTRICTS": 5,
+  "DELTA": 0.10,
+  "MIN_RATE": 0.50,
+  "SIM_THRESHOLD": 0.70,
+  "JACCARD_THRESHOLD": 0.50
+ },
+ "보유구간": [["준보편", 0.75], ["다수", 0.50], ["소수", 0.25], ["희소", 0.0]],
+ "법정필수호": ["2", "4"],
+ "교차제약": [
+  "pairs 의 A·B 는 facets.districts 에 있어야 한다",
+  "pairs 의 통제축 값은 A·B 가 같아야 한다 — 이것이 깨지면 축 귀속이 무의미하다",
+  "pairs 의 대상축 값은 A·B 가 달라야 한다 (대상축이 '동일' 인 BASE 는 4축 모두 같아야 한다)",
+  "slots 의 coverage = district_count / 조문표제_보유문서수",
+  "norms 의 district_count = districts 길이",
+  "norms 의 variants 지구 합집합 = 군집 districts",
+  "determinism 의 norm_id 는 norms 에 있어야 한다",
+  "determinism 에는 MIN_DISTRICTS 이상 규범만 실린다",
+  "determinism 의 보유율 = district_count / 모수, 보유구간은 보유율에서 결정된다",
+  "determinism 의 귀속축은 축별불일치율에서 선두여야 한다",
+  "한 규범의 축별불일치율은 네 축이 같은 tier 를 써야 한다",
+  "_extraction_gap 의 호는 법정필수호에 속해야 한다"
+ ],
+ "검증": "python3 scripts/verify_contract.py [--full]"
+}

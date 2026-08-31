@@ -1,0 +1,42 @@
+# 모수 규약
+
+이 문서는 비율·등급 필드의 분모를 정하는 규칙을 정한다. 분모를 잘못 잡으면 개별 수치가
+모두 맞아도 전체 분포가 틀린다.
+
+## ubiquity (terms.json)
+
+분모를 전체 문서 수로 잡으면 정의 조항이 없는 문서(결정조서·별표 등)가 포함되어 모든
+용어 비율이 낮아진다. `district_ratio`(전체 문서 기준)와 `district_ratio_adj`(정의문 추출
+성공 문서 기준)를 둘 다 남기고, 등급은 조정 모수로 판정한다. 대상 문서 189건 중 정의문
+추출에 성공한 문서는 165건이다.
+
+## definiation.json 은 다시 센다
+
+`doc_frequency`, `district_ratio_def`, `ubiquity`, `regions`, `articles`, `variants` 는
+정의 조항 소속 occurrence 만으로 다시 센 값이다. `terms.json` 의 동명 필드와 값이 다르므로
+같은 이름으로 비교하지 않는다.
+
+- 분모는 `정의조항_보유문서수` 161건이다. `terms.json` 의 `정의문_추출성공_문서수` 165건이
+  아니다
+- 갈래의 `districts` 와 `count` 도 다시 센다. `terms.json` 의 값을 그대로 옮기면 정의 조항
+  밖 지구가 섞인다. 실측 171건에서 이 혼입이 확인되었다
+- `classification` 에서 `ubiquity` 와 `source_article_*` 는 제거한다. 자체 재계산 값과
+  이름이 겹쳐 오독을 부른다
+- 등급 체계가 다르다. `보편`(≥0.5), `빈출`(≥0.1), `산발`, `단일지구` 로 판정하며,
+  `terms.json` 의 `코어` 계열과 섞어 집계하지 않는다
+
+## cited_laws
+
+인용법령은 대표 정의문 하나가 아니라 전 variant 에서 수집한 결과로 판정한다. `지침고유` 는
+어떤 지구에서도 법령을 인용하지 않은 경우에 한해 부여한다. 대표 정의문 하나만 보고
+판정하면 `cited_laws` 가 비어 있지 않은데 `지침고유` 인 모순이 생긴다. 실측 83건에서 이
+모순이 확인되었다.
+
+법령명 파싱에서 표제어를 법령으로 잘못 잡는 경우는 `../common-mistakes.md` 의
+「법령명 파싱」 절에서 확인한다.
+
+## OCR 문서
+
+OCR 문서에서 흡수한 용어에는 `ocr_corrected: true`, `ocr_original_term`,
+`source_quality: "OCR"` 을 occurrence 와 variant 양쪽에 붙인다. 오인식 패턴은 legal-ocr
+스킬에서 확인한다.

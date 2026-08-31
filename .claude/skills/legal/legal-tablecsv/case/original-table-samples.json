@@ -1,0 +1,170 @@
+{
+  "purpose": "Task 5 fixed evidence that original HWP/PDF binaries contain recoverable table structures. These counts are structure observations only, not accuracy counts and not normativity counts.",
+  "generated_by": "read-only extraction smoke to /private/tmp/legal-tablecsv-task5-cases-round1",
+  "verification_command": "/opt/homebrew/bin/python3 .claude/skills/legal/legal-tablecsv/scripts/extract_tables.py --root . --district '의정부우정 공공주택지구' --district '하남미사 공공주택지구' --district '남양주왕숙 공공주택지구' --output /private/tmp/legal-tablecsv-task5-cases-round1",
+  "interpretation_limits": [
+    "structure_count is the number of tables emitted by hwp5html or pdfplumber for this extractor revision.",
+    "structure_count does not mean all original tables were extracted accurately.",
+    "structure_count does not mean the table is normative.",
+    "HTML <table> tags and pdfplumber candidates are not used as accuracy or normativity counts.",
+    "The legacy _table_loss.json loss count records markdown/table-loss symptoms and is not a replacement for original binary extraction."
+  ],
+  "samples": [
+    {
+      "district_name": "의정부우정 공공주택지구",
+      "district_id": "41150LH2019001",
+      "format": "HWP",
+      "document_name": "지구단위계획 시행지침.hwp",
+      "source_path": "경기/의정부우정 공공주택지구/지구단위계획 시행지침.hwp",
+      "confirmation_command": "/opt/homebrew/bin/python3 .claude/skills/legal/legal-tablecsv/scripts/extract_tables.py --root . --district '의정부우정 공공주택지구' --output /private/tmp/legal-tablecsv-task5-uijeongbu",
+      "table_loss_count": 193,
+      "structure_count": 190,
+      "cell_count": 1637,
+      "representative_cells": [
+        {
+          "table_id": "41150LH2019001-0-0-0",
+          "row": 0,
+          "column": 0,
+          "value": "③①주체②\n③\n①\n주체\n②"
+        },
+        {
+          "table_id": "41150LH2019001-0-0-0",
+          "row": 1,
+          "column": 0,
+          "value": "①, ②는 연접한 획지로 인정\n③은 연접한 획지가 아님"
+        },
+        {
+          "table_id": "41150LH2019001-0-0-12",
+          "row": 0,
+          "column": 0,
+          "value": "적용대상"
+        },
+        {
+          "table_id": "41150LH2019001-0-0-12",
+          "row": 0,
+          "column": 1,
+          "value": "생태면적률 확보기준"
+        },
+        {
+          "table_id": "41150LH2019001-0-0-12",
+          "row": 1,
+          "column": 0,
+          "value": "공동주택용지"
+        },
+        {
+          "table_id": "41150LH2019001-0-0-12",
+          "row": 1,
+          "column": 1,
+          "value": "35% 이상"
+        }
+      ],
+      "extraction_notes": "HWP page is recorded as 0 because hwp5html does not preserve physical page numbers."
+    },
+    {
+      "district_name": "하남미사 공공주택지구",
+      "district_id": "41450KH2009001",
+      "format": "HWP",
+      "document_name": "지구단위계획 시행지침.hwp",
+      "source_path": "경기/하남미사 공공주택지구/지구단위계획 시행지침.hwp",
+      "confirmation_command": "/opt/homebrew/bin/python3 .claude/skills/legal/legal-tablecsv/scripts/extract_tables.py --root . --district '하남미사 공공주택지구' --output /private/tmp/legal-tablecsv-task5-hanam",
+      "table_loss_count": 181,
+      "structure_count": 146,
+      "cell_count": 2937,
+      "representative_cells": [
+        {
+          "table_id": "41450KH2009001-0-0-0",
+          "row": 0,
+          "column": 0,
+          "value": "목     차"
+        },
+        {
+          "table_id": "41450KH2009001-0-0-1",
+          "row": 0,
+          "column": 1,
+          "value": "제Ⅰ편 총 론"
+        },
+        {
+          "table_id": "41450KH2009001-0-0-13",
+          "row": 0,
+          "column": 3,
+          "value": "R1-2"
+        },
+        {
+          "table_id": "41450KH2009001-0-0-13",
+          "row": 2,
+          "column": 3,
+          "value": "60% 이하"
+        },
+        {
+          "table_id": "41450KH2009001-0-0-13",
+          "row": 2,
+          "column": 4,
+          "value": "200% 이하"
+        }
+      ],
+      "extraction_notes": "HWP page is recorded as 0 because hwp5html does not preserve physical page numbers."
+    },
+    {
+      "district_name": "남양주왕숙 공공주택지구",
+      "district_id": "41360MX2019001",
+      "format": "PDF-in-ZIP",
+      "document_name": "1.1. [본단지]★남양주왕숙 지구단위계획시행지침_지구계획 4차 승인 .pdf",
+      "source_path": "경기/남양주왕숙 공공주택지구/지구단위계획 시행지침.zip::1. 지구단위계획 시행지침/1.1. [본단지]★남양주왕숙 지구단위계획시행지침_지구계획 4차 승인 .pdf",
+      "confirmation_command": "/opt/homebrew/bin/python3 .claude/skills/legal/legal-tablecsv/scripts/extract_tables.py --root . --district '남양주왕숙 공공주택지구' --output /private/tmp/legal-tablecsv-task5-namyangju",
+      "table_loss_count": 291,
+      "structure_count": 296,
+      "cell_count": 7029,
+      "representative_cells": [
+        {
+          "table_id": "41360MX2019001-0-6-0",
+          "row": 0,
+          "column": 0,
+          "value": "구 분"
+        },
+        {
+          "table_id": "41360MX2019001-0-6-0",
+          "row": 1,
+          "column": 1,
+          "value": "· 남북을 이어주는 상징가로축을 중심으로 도시 활력 및 상징성 강화하는 공간 형성\n· 다양한 변화가 일어나는 공간으로 중심성, 유기성, 가변성, 융합의 복합적 이미지 연출\n· 복합적 용도와 다양한 활동을 기반으로 타 도시와 차별되는 공간 형성"
+        }
+      ],
+      "extraction_notes": "PDF page numbers are 1-based."
+    },
+    {
+      "district_name": "남양주왕숙 공공주택지구",
+      "district_id": "41360MX2019001",
+      "format": "PDF-in-ZIP",
+      "document_name": "1.2. [기업이전단지] 남양주왕숙 지구단위계획시행지침_지구계획 2차 승인 .pdf",
+      "source_path": "경기/남양주왕숙 공공주택지구/지구단위계획 시행지침.zip::1. 지구단위계획 시행지침/1.2. [기업이전단지] 남양주왕숙 지구단위계획시행지침_지구계획 2차 승인 .pdf",
+      "confirmation_command": "/opt/homebrew/bin/python3 .claude/skills/legal/legal-tablecsv/scripts/extract_tables.py --root . --district '남양주왕숙 공공주택지구' --output /private/tmp/legal-tablecsv-task5-namyangju",
+      "table_loss_count": 291,
+      "structure_count": 69,
+      "cell_count": 1193,
+      "representative_cells": [
+        {
+          "table_id": "41360MX2019001-1-7-0",
+          "row": 0,
+          "column": 0,
+          "value": "③ ① 주체 ②\n①, ②는 연접한 획지로 인정\n③은 연접한 획지가 아님"
+        },
+        {
+          "table_id": "41360MX2019001-1-7-1",
+          "row": 0,
+          "column": 1,
+          "value": "보\n행\n자\n도\n로"
+        }
+      ],
+      "extraction_notes": "PDF page numbers are 1-based."
+    }
+  ],
+  "smoke_result": {
+    "tables": 701,
+    "cells": 12796,
+    "errors": 0,
+    "sha256": {
+      "tables.csv": "80ad0cac5cef11dddbd4115c1724eea016c57f7bc2b51ddc739c3fa0947c133b",
+      "cells.csv": "2ce160bcc3c45d5906c110856e6cf0a940ef078b43adf0e75b18cfc607c031ae",
+      "_extraction_report.json": "4a7c952bfb644af88795f8e242853081e1698dcf99d94eb70221ae2e97571c8c"
+    }
+  }
+}

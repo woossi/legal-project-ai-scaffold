@@ -1,0 +1,29 @@
+# 통합 개발 환경 — kb·legal·viz 를 `.venv` 하나에 담는다
+#
+#   uv venv .venv --python 3.14
+#   uv pip install --python .venv/bin/python -r requirements.txt
+#
+# `uv pip sync` 를 쓰지 말 것. sync 는 완전히 해석된 목록을 기대해서 이 파일의
+# 직접 의존만 깔고 numpy·lxml 같은 전이 의존을 빠뜨린다.
+#
+# lot-zone 좌표결합 시험은 버전 핀 재현 계약이므로 requirements-lot-zone.txt 로
+# 분리 유지한다. 이 파일에 shapely·pymupdf 를 넣지 말 것.
+
+# kb 온톨로지 — RDF/OWL 처리
+rdflib>=7.1
+pyshacl>=0.29
+
+# 산출물 계약 검증 — legal-* 스킬의 verify_*.py 가 JSON Schema 로 대조한다
+jsonschema>=4.0
+
+# legal — hwp 본문 추출(hwp5txt 실행파일) 과 pdf 표 추출
+pyhwp
+pdfplumber
+
+# viz — 도표(matplotlib) 와 발표자료(python-pptx, pillow)
+matplotlib
+pillow
+python-pptx
+
+# 테스트
+pytest>=8.0

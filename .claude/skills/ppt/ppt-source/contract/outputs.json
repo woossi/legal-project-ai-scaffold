@@ -1,0 +1,50 @@
+{
+  "설명": "output/ppt/<deck-id>/01_source.json 산출물 계약. 구조는 source.schema.json, 값 도메인과 교차 제약은 이 파일에 둔다. 수치의 정본은 이 매니페스트이며 하류(ppt-writer)는 여기 없는 수치를 덱에 쓰지 않는다.",
+
+  "산출물": [
+    {
+      "path": "output/ppt/<deck-id>/01_source.json",
+      "생성": "ppt-curator",
+      "내용": "덱 근거 자산의 원천 목록(sources)과 실측 수치(facts), 한계(limitations)",
+      "schema": "source.schema.json"
+    }
+  ],
+
+  "선행조건": [
+    "덱 대상(target)이 호출자에게서 확정돼 있다. 기본 범위를 고정하지 않는다",
+    "sources[].path 의 파일이 실재한다",
+    "output/ppt/<deck-id>/ 디렉터리가 있다"
+  ],
+
+  "멱등성": "같은 입력 파일 집합에 대해 다시 돌리면 sources[].sha256 과 facts[].value 가 같아야 한다. as_of 만 갱신된다. 값이 달라지면 상류가 바뀐 것이므로 그 사실을 보고한다. generatedAt 류의 실행시각 필드를 두지 않는다 — 매 실행 갱신되는 타임스탬프는 이 저장소에서 멱등성 위반으로 관측된 이력이 있다.",
+
+  "값도메인": {
+    "owner_team": ["legal", "kb", "viz", "common", "docs"],
+    "contract_status": {
+      "verified": "그 산출물의 계약 검증기를 돌려 통과를 직접 확인함",
+      "failed": "검증기를 돌렸고 실패함. 이 상태의 산출물에서 뽑은 fact 는 caveat 가 필수다",
+      "unchecked": "검증기가 있으나 돌리지 않음",
+      "unknown": "검증기 유무를 모름. 기본값이며 추정으로 승격하지 않음"
+    },
+    "subject": "개체 종류. 행 수를 개체 수로 세지 않도록 무엇을 셌는지 명시한다. 이 저장소에는 중복행을 개체 수로 오인한 이력이 있다",
+    "period": "기간. 시점 개념이 없는 수치면 null",
+    "spatial_unit": "공간 단위. 공간 개념이 없는 수치면 null",
+    "comparison_basis": "대비 기준의 서술. 분모 수치인 denominator 와 다른 층이다",
+    "as_of": "YYYY-MM-DD 절대일. '오늘'·'최근' 같은 상대 표기 금지"
+  },
+
+  "교차제약": [
+    "facts[].source_id 는 sources[].id 에 실재해야 한다",
+    "facts[].denominator_fact 가 있으면 그 id 가 facts[] 에 실재해야 한다",
+    "비율·백분율 성격의 fact 는 denominator 또는 denominator_fact 중 하나가 있어야 한다. 분자만으로 비율을 만들지 않는다",
+    "비율 성격의 fact 는 comparison_basis 가 null 이 아니어야 한다",
+    "같은 대상에 분모가 둘 이상이면 fact 를 둘 발급한다. 하나로 합치지 않는다",
+    "as_of 또는 필터 조건이 다른 두 파일의 수치를 한 fact 로 합치지 않는다",
+    "source 의 contract_status 가 failed 이면 그 source_id 를 쓰는 fact 는 caveat 가 있어야 한다",
+    "표본 기반 수치는 caveat 에 표본 규모와 일반화 불가 사실을 적는다",
+    "measured_by 는 '요약표에서 옮김' 류를 금지한다. 원본을 직접 센 방법이어야 한다",
+    "subject 는 센 개체의 종류다. 행 수를 셌으면 그 행이 무엇의 행인지 적는다"
+  ],
+
+  "검증": "ppt-verify/scripts/verify_deck.py 가 source.schema.json 구조, source·fact 내부 참조, locator 재측정, sha256 일치를 검사한다. 공통 contract-verify 는 등록된 ppt-verify 검증기를 최종 게이트로 실행한다."
+}
